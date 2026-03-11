@@ -215,14 +215,14 @@ async def get_history(
 
 async def chat_with_task(
     db: AsyncSession, task_id: str, message: str
-) -> ChatResponse | None:
+) -> ChatResponse:
     """Chat with the context of a specific research task."""
     stmt = select(ResearchTask).where(ResearchTask.id == task_id)
     result = await db.execute(stmt)
     task = result.scalar_one_or_none()
 
     if task is None:
-        return None
+        raise ValueError(f"Research task {task_id} not found.")
 
     # Load VectorStore and HybridSearcher
     from app.rag.vector_store import VectorStore
@@ -241,14 +241,17 @@ async def chat_with_task(
 
     if not os.path.exists(vector_dir):
         logger.warning(f"Vector index not found at {vector_dir} for task {task_id}")
-        return None # Router will handle this as 404
+        # Be more specific about WHY it might be missing
+        if task.progress < 50:
+            raise RuntimeError(f"Indexing in progress ({task.progress}%). Please wait until papers are read.")
+        raise FileNotFoundError(f"Knowledge index missing for task {task_id}. Please restart this research.")
 
     try:
         vector_store = VectorStore()
         vector_store.load(vector_dir)
         
         if not vector_store.documents:
-            raise RuntimeError("No knowledge base found for this research. Chat is unavailable.")
+            raise RuntimeError("Knowledge base is empty. No papers were successfully indexed for this topic.")
 
         hybrid_searcher = HybridSearcher(vector_store)
         await hybrid_searcher.update_index(

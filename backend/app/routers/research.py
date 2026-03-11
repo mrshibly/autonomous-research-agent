@@ -146,20 +146,20 @@ async def chat_with_research(
     """
     try:
         result = await research_service.chat_with_task(db, task_id, body.message)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
         if "429" in str(e) or "attempts" in str(e) or "rate limit" in str(e).lower():
             raise HTTPException(
                 status_code=429, 
                 detail="LLM Provider Rate Limit exceeded. Please wait a minute and try again."
             )
-        raise HTTPException(status_code=500, detail=f"AI Service Error: {str(e)}")
-        
-    if result is None:
-        raise HTTPException(
-            status_code=404, 
-            detail="Chat context not ready. Task must be completed and indexed."
-        )
-    return result
+        raise HTTPException(status_code=500, detail=f"Chat Error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected Chat Error: {str(e)}")
 
 
 @router.get("/{task_id}/export/pdf", summary="Export report as PDF")
