@@ -1,0 +1,318 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import {
+  HiOutlineArrowLeft,
+  HiOutlineDocumentArrowDown,
+  HiOutlineExclamationTriangle,
+} from 'react-icons/hi2';
+import { useResearchStatus } from '../hooks/useResearchStatus';
+import { getResearchReport } from '../services/api';
+import ProgressTracker from '../components/ProgressTracker';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ChatSidebar from '../components/ChatSidebar';
+import './ResearchView.css';
+
+export default function ResearchView() {
+  const { taskId } = useParams();
+  const navigate = useNavigate();
+  const { status, loading, error } = useResearchStatus(taskId);
+  const [report, setReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  useEffect(() => {
+    if (status?.status === 'completed' && !report) {
+      setReportLoading(true);
+      getResearchReport(taskId)
+        .then(setReport)
+        .catch(console.error)
+        .finally(() => setReportLoading(false));
+    }
+  }, [status?.status, taskId, report]);
+
+  const handleDownload = () => {
+    handleExport('markdown');
+  };
+
+  const handleExport = async (type) => {
+    try {
+      setReportLoading(true);
+      const url = `/api/v1/research/${taskId}/export/${type}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Determine extension and filename
+      const extension = type === 'pdf' ? '.pdf' : type === 'bibtex' ? '.bib' : '.md';
+      const safeTopic = (status?.topic || 'research-report')
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase()
+        .slice(0, 30);
+      const filename = `${safeTopic}_${taskId.slice(0, 8)}${extension}`;
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to export report. Please try again.');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  if (loading && !status) {
+    return <LoadingSpinner size="lg" message="Loading research task..." />;
+  }
+
+  if (error && !status) {
+    return (
+      <div className="error-state">
+        <HiOutlineExclamationTriangle className="error-icon" />
+        <h2>Task Not Found</h2>
+        <p>{error}</p>
+        <button className="back-btn" onClick={() => navigate('/')}>
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="research-view" id="research-view-page">
+      {/* Header */}
+      <div className="view-header animate-fade-in-up">
+        <button className="back-link" onClick={() => navigate('/')}>
+          <HiOutlineArrowLeft /> Back to Dashboard
+        </button>
+        <div className="view-title-row">
+          <div>
+            <h1 className="view-title">{status?.topic}</h1>
+            <div className="view-meta">
+              <span className={`status-badge status-${status?.status}`}>
+                {status?.status}
+              </span>
+              {status?.papers_found > 0 && (
+                <span className="papers-count">
+                  {status.papers_found} papers found
+                </span>
+              )}
+            </div>
+          </div>
+          {report && (
+            <div className="export-actions">
+              <button 
+                className="download-btn secondary" 
+                onClick={() => handleExport('pdf')}
+                title="Download PDF"
+              >
+                <HiOutlineDocumentArrowDown /> PDF
+              </button>
+              <button 
+                className="download-btn secondary" 
+                onClick={() => handleExport('bibtex')}
+                title="Download BibTeX"
+              >
+                <HiOutlineDocumentArrowDown /> BibTeX
+              </button>
+              <button className="download-btn" onClick={handleDownload} id="download-report-btn">
+                <HiOutlineDocumentArrowDown />
+                Markdown
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Progress Tracker / Failed State */}
+      {status?.status !== 'completed' && status?.status !== 'failed' && (
+        <div className="progress-section glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <ProgressTracker
+            currentStage={status?.current_stage || 'queued'}
+            progress={status?.progress || 0}
+            status={status?.status}
+          />
+        </div>
+      )}
+
+      {status?.status === 'failed' && (
+        <div className="failed-card glass-card animate-fade-in-up">
+          <HiOutlineExclamationTriangle className="failed-icon" />
+          <h3>Research Failed</h3>
+          <p>An error occurred mapping "{status?.topic}". Please try again.</p>
+          <button className="retry-btn" onClick={() => navigate('/')}>
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Report Content */}
+      {reportLoading && (
+        <LoadingSpinner size="md" message="Loading report..." />
+      )}
+
+      {report && (
+        <div className="report-container animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          {/* Summary */}
+          <section className="report-section glass-card">
+            <h2 className="report-section-title">
+              <span className="section-emoji">📋</span> Executive Summary
+            </h2>
+            <div className="report-text">{report.summary}</div>
+          </section>
+
+          {/* Key Techniques */}
+          {report.key_techniques?.length > 0 && (
+            <section className="report-section glass-card" style={{ animationDelay: '0.3s' }}>
+              <h2 className="report-section-title">
+                <span className="section-emoji">🔑</span> Key Techniques
+              </h2>
+              <ul className="techniques-list">
+                {report.key_techniques.map((tech, i) => (
+                  <li key={i} className="technique-item">
+                    <span className="technique-dot" />
+                    {tech}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Comparison Table */}
+          {report.comparison_table?.length > 0 && (
+            <section className="report-section glass-card" style={{ animationDelay: '0.4s' }}>
+              <h2 className="report-section-title">
+                <span className="section-emoji">⚖️</span> Comparison Table
+              </h2>
+              <div className="table-container">
+                <table className="comparison-table">
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Description</th>
+                      <th>Strengths</th>
+                      <th>Limitations</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.comparison_table.map((row, i) => (
+                      <tr key={i}>
+                        <td className="method-cell">{row.method}</td>
+                        <td>{row.description}</td>
+                        <td className="strength-cell">{row.strengths}</td>
+                        <td className="limitation-cell">{row.limitations}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Future Directions */}
+          {report.future_directions?.length > 0 && (
+            <section className="report-section glass-card" style={{ animationDelay: '0.5s' }}>
+              <h2 className="report-section-title">
+                <span className="section-emoji">🔮</span> Future Directions
+              </h2>
+              <ul className="directions-list">
+                {report.future_directions.map((dir, i) => (
+                  <li key={i} className="direction-item">
+                    <span className="direction-number">{i + 1}</span>
+                    {dir}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Analyzed Papers */}
+          {report.papers?.length > 0 && (
+            <section className="report-section glass-card" style={{ animationDelay: '0.55s' }}>
+              <h2 className="report-section-title">
+                <span className="section-emoji">📄</span> Analyzed Papers
+              </h2>
+              <div className="papers-grid">
+                {report.papers.map((paper, i) => (
+                  <div className="paper-card" key={paper.id || i}>
+                    <div className="paper-header">
+                      <h4 className="paper-title">{paper.title}</h4>
+                      {paper.relevance_score != null && (
+                        <span className={`relevance-badge ${paper.relevance_score >= 0.7 ? 'high' : 'medium'}`}>
+                          {(paper.relevance_score * 100).toFixed(0)}%
+                        </span>
+                      )}
+                    </div>
+                    <p className="paper-authors">{paper.authors}</p>
+                    <p className="paper-summary">{paper.summary || paper.abstract}</p>
+                    <a href={paper.url} target="_blank" rel="noopener noreferrer" className="paper-link">
+                      View Paper →
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* References */}
+          {report.references?.length > 0 && (
+            <section className="report-section glass-card" style={{ animationDelay: '0.6s' }}>
+              <h2 className="report-section-title">
+                <span className="section-emoji">📚</span> References
+              </h2>
+              <ol className="references-list">
+                {report.references.map((ref, i) => (
+                  <li key={i} className="reference-item">{ref}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* Interactive Chat */}
+      {status?.status === 'completed' && <ChatSidebar taskId={taskId} />}
+    </div>
+  );
+}
+
+function generateMarkdown(report) {
+  let md = `# Research Report: ${report.topic}\n\n`;
+  md += `*Generated: ${new Date(report.generated_at).toLocaleString()}*\n\n`;
+  md += `## Summary\n\n${report.summary}\n\n`;
+
+  if (report.key_techniques?.length) {
+    md += `## Key Techniques\n\n`;
+    report.key_techniques.forEach((t) => (md += `- ${t}\n`));
+    md += '\n';
+  }
+
+  if (report.comparison_table?.length) {
+    md += `## Comparison Table\n\n`;
+    md += `| Method | Description | Strengths | Limitations |\n`;
+    md += `|--------|-------------|-----------|-------------|\n`;
+    report.comparison_table.forEach((r) => {
+      md += `| ${r.method} | ${r.description} | ${r.strengths} | ${r.limitations} |\n`;
+    });
+    md += '\n';
+  }
+
+  if (report.future_directions?.length) {
+    md += `## Future Directions\n\n`;
+    report.future_directions.forEach((d, i) => (md += `${i + 1}. ${d}\n`));
+    md += '\n';
+  }
+
+  if (report.references?.length) {
+    md += `## References\n\n`;
+    report.references.forEach((r, i) => (md += `${i + 1}. ${r}\n`));
+  }
+
+  return md;
+}

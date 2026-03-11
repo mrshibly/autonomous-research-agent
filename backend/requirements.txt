@@ -1,0 +1,48 @@
+# FastAPI & Server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Database
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+
+# Pydantic & Settings
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# LLM Providers
+groq==0.15.0
+openai==1.58.1
+
+# RAG & Embeddings
+faiss-cpu==1.9.0.post1
+sentence-transformers==3.3.1
+
+# Web Search (Free)
+duckduckgo-search==7.2.1
+
+# Arxiv
+arxiv==2.1.3
+
+# PDF Parsing
+PyMuPDF==1.25.3
+
+# HTTP
+httpx==0.28.1
+aiohttp==3.11.11
+
+# Security & Rate Limiting
+slowapi==0.1.9
+python-dotenv==1.0.1
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+
+# Utilities
+# Advanced Features
+rank_bm25==0.2.2
+biopython==1.85
+fpdf2==2.8.2
