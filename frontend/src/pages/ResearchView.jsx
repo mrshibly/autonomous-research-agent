@@ -4,7 +4,10 @@ import {
   HiOutlineArrowLeft,
   HiOutlineDocumentArrowDown,
   HiOutlineExclamationTriangle,
+  HiOutlineLink,
+  HiOutlineCheck,
 } from 'react-icons/hi2';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useResearchStatus } from '../hooks/useResearchStatus';
 import { getResearchReport } from '../services/api';
 import ProgressTracker from '../components/ProgressTracker';
@@ -20,6 +23,7 @@ export default function ResearchView() {
   const { status, loading, error } = useResearchStatus(taskId);
   const [report, setReport] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     if (status?.status === 'completed' && !report) {
@@ -30,6 +34,12 @@ export default function ResearchView() {
         .finally(() => setReportLoading(false));
     }
   }, [status?.status, taskId, report]);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
 
   const handleDownload = () => {
     handleExport('markdown');
@@ -86,10 +96,28 @@ export default function ResearchView() {
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5, staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
     <div className="research-view" id="research-view-page">
       {/* Header */}
-      <div className="view-header animate-fade-in-up">
+      <motion.div 
+        className="view-header"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+      >
         <button className="back-link" onClick={() => navigate('/')}>
           <HiOutlineArrowLeft /> Back to Dashboard
         </button>
@@ -107,73 +135,102 @@ export default function ResearchView() {
               )}
             </div>
           </div>
-          {report && (
-            <div className="export-actions">
-              <button 
-                className="download-btn secondary" 
-                onClick={() => handleExport('pdf')}
-                title="Download PDF"
-              >
-                <HiOutlineDocumentArrowDown /> PDF
-              </button>
-              <button 
-                className="download-btn secondary" 
-                onClick={() => handleExport('bibtex')}
-                title="Download BibTeX"
-              >
-                <HiOutlineDocumentArrowDown /> BibTeX
-              </button>
-              <button className="download-btn" onClick={handleDownload} id="download-report-btn">
-                <HiOutlineDocumentArrowDown />
-                Markdown
-              </button>
-            </div>
-          )}
+          <div className="header-actions">
+            <button 
+              className={`copy-link-btn ${copySuccess ? 'success' : ''}`}
+              onClick={handleCopyLink}
+              title="Copy shareable link"
+            >
+              {copySuccess ? <HiOutlineCheck /> : <HiOutlineLink />}
+              {copySuccess ? 'Copied!' : 'Copy Link'}
+            </button>
+            {report && (
+              <div className="export-actions">
+                <button 
+                  className="download-btn secondary" 
+                  onClick={() => handleExport('pdf')}
+                  title="Download PDF"
+                >
+                  <HiOutlineDocumentArrowDown /> PDF
+                </button>
+                <button className="download-btn" onClick={handleDownload} id="download-report-btn">
+                  <HiOutlineDocumentArrowDown />
+                  Markdown
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Progress Tracker / Failed State */}
-      {status?.status !== 'completed' && status?.status !== 'failed' && (
-        <div className="progress-section glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <ProgressTracker
-            currentStage={status?.current_stage || 'queued'}
-            progress={status?.progress || 0}
-            status={status?.status}
-          />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {status?.status !== 'completed' && status?.status !== 'failed' && (
+          <motion.div 
+            key="progress"
+            className="progress-section glass-card"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+          >
+            <ProgressTracker
+              currentStage={status?.current_stage || 'queued'}
+              progress={status?.progress || 0}
+              status={status?.status}
+            />
+          </motion.div>
+        )}
 
-      {status?.status === 'failed' && (
-        <div className="failed-card glass-card animate-fade-in-up">
-          <HiOutlineExclamationTriangle className="failed-icon" />
-          <h3>Research Failed</h3>
-          <p>An error occurred mapping "{status?.topic}". Please try again.</p>
-          <button className="retry-btn" onClick={() => navigate('/')}>
-            Try Again
-          </button>
-        </div>
-      )}
+        {status?.status === 'failed' && (
+          <motion.div 
+            key="failed"
+            className="failed-card glass-card"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <HiOutlineExclamationTriangle className="failed-icon" />
+            <h3>Research Failed</h3>
+            <p>An error occurred mapping "{status?.topic}". Please try again.</p>
+            <button className="retry-btn" onClick={() => navigate('/')}>
+              Try Again
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Report Content */}
-      {reportLoading && (
-        <LoadingSpinner size="md" message="Loading report..." />
-      )}
+      <AnimatePresence>
+        {reportLoading && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+          >
+            <LoadingSpinner size="md" message="Loading report..." />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {report && (
-        <div className="report-container animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <motion.div 
+          className="report-container"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {/* Summary */}
-          <section className="report-section glass-card">
+          <motion.section className="report-section glass-card" variants={itemVariants}>
             <h2 className="report-section-title">
               <span className="section-emoji">📋</span> Executive Summary
             </h2>
             <div className="report-text">
               <ReactMarkdown>{report.summary}</ReactMarkdown>
             </div>
-          </section>
+          </motion.section>
 
           {/* Key Techniques */}
           {report.key_techniques?.length > 0 && (
-            <section className="report-section glass-card" style={{ animationDelay: '0.3s' }}>
+            <motion.section className="report-section glass-card" variants={itemVariants}>
               <h2 className="report-section-title">
                 <span className="section-emoji">🔑</span> Key Techniques
               </h2>
@@ -185,12 +242,12 @@ export default function ResearchView() {
                   </li>
                 ))}
               </ul>
-            </section>
+            </motion.section>
           )}
 
           {/* Comparison Table */}
           {report.comparison_table?.length > 0 && (
-            <section className="report-section glass-card" style={{ animationDelay: '0.4s' }}>
+            <motion.section className="report-section glass-card" variants={itemVariants}>
               <h2 className="report-section-title">
                 <span className="section-emoji">⚖️</span> Comparison Table
               </h2>
@@ -216,12 +273,12 @@ export default function ResearchView() {
                   </tbody>
                 </table>
               </div>
-            </section>
+            </motion.section>
           )}
 
           {/* Future Directions */}
           {report.future_directions?.length > 0 && (
-            <section className="report-section glass-card" style={{ animationDelay: '0.5s' }}>
+            <motion.section className="report-section glass-card" variants={itemVariants}>
               <h2 className="report-section-title">
                 <span className="section-emoji">🔮</span> Future Directions
               </h2>
@@ -233,12 +290,12 @@ export default function ResearchView() {
                   </li>
                 ))}
               </ul>
-            </section>
+            </motion.section>
           )}
 
           {/* Analyzed Papers */}
           {report.papers?.length > 0 && (
-            <section className="report-section glass-card" style={{ animationDelay: '0.55s' }}>
+            <motion.section className="report-section glass-card" variants={itemVariants}>
               <h2 className="report-section-title">
                 <span className="section-emoji">📄</span> Analyzed Papers
               </h2>
@@ -247,12 +304,12 @@ export default function ResearchView() {
                   <PaperCard key={paper.id || i} paper={paper} />
                 ))}
               </div>
-            </section>
+            </motion.section>
           )}
 
           {/* References */}
           {report.references?.length > 0 && (
-            <section className="report-section glass-card" style={{ animationDelay: '0.6s' }}>
+            <motion.section className="report-section glass-card" variants={itemVariants}>
               <h2 className="report-section-title">
                 <span className="section-emoji">📚</span> References
               </h2>
@@ -261,9 +318,9 @@ export default function ResearchView() {
                   <li key={i} className="reference-item">{ref}</li>
                 ))}
               </ol>
-            </section>
+            </motion.section>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Interactive Chat */}
@@ -282,7 +339,11 @@ function PaperCard({ paper }) {
     : summary;
 
   return (
-    <div className="paper-card" id={`paper-${paper.id}`}>
+    <motion.div 
+      className="paper-card" 
+      id={`paper-${paper.id}`}
+      whileHover={{ y: -4, shadow: "0 10px 40px rgba(0,0,0,0.3)" }}
+    >
       <div className="paper-card-main">
         <div className="paper-header">
           <h4 className="paper-title">{paper.title}</h4>
@@ -307,9 +368,13 @@ function PaperCard({ paper }) {
           })()}
         </p>
 
-        <div className={`paper-summary-content ${isExpanded ? 'expanded' : ''}`}>
-          <ReactMarkdown>{displaySummary}</ReactMarkdown>
-        </div>
+        <motion.div 
+          className={`paper-summary-content ${isExpanded ? 'expanded' : ''}`}
+          initial={false}
+          animate={{ height: isExpanded ? 'auto' : '120px' }}
+        >
+          <ReactMarkdown>{isExpanded ? summary : displaySummary}</ReactMarkdown>
+        </motion.div>
 
         <div className="paper-card-footer">
           <div className="footer-links">
@@ -328,41 +393,6 @@ function PaperCard({ paper }) {
           <span className="paper-source-tag">{paper.source || 'Scholar'}</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
-
-function generateMarkdown(report) {
-  let md = `# Research Report: ${report.topic}\n\n`;
-  md += `*Generated: ${new Date(report.generated_at).toLocaleString()}*\n\n`;
-  md += `## Summary\n\n${report.summary}\n\n`;
-
-  if (report.key_techniques?.length) {
-    md += `## Key Techniques\n\n`;
-    report.key_techniques.forEach((t) => (md += `- ${t}\n`));
-    md += '\n';
-  }
-
-  if (report.comparison_table?.length) {
-    md += `## Comparison Table\n\n`;
-    md += `| Method | Description | Strengths | Limitations |\n`;
-    md += `|--------|-------------|-----------|-------------|\n`;
-    report.comparison_table.forEach((r) => {
-      md += `| ${r.method} | ${r.description} | ${r.strengths} | ${r.limitations} |\n`;
-    });
-    md += '\n';
-  }
-
-  if (report.future_directions?.length) {
-    md += `## Future Directions\n\n`;
-    report.future_directions.forEach((d, i) => (md += `${i + 1}. ${d}\n`));
-    md += '\n';
-  }
-
-  if (report.references?.length) {
-    md += `## References\n\n`;
-    report.references.forEach((r, i) => (md += `${i + 1}. ${r}\n`));
-  }
-
-  return md;
 }
