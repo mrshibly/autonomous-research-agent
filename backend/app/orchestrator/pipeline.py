@@ -14,6 +14,7 @@ from app.agents.paper_agent import PaperAgent
 from app.agents.search_agent import SearchAgent
 from app.agents.summarizer_agent import SummarizerAgent
 from app.agents.writer_agent import WriterAgent
+from app.config import get_settings
 from app.models.research import Paper, ResearchTask
 from app.rag.chunker import chunk_text
 from app.rag.vector_store import VectorStore
@@ -121,9 +122,9 @@ class ResearchPipeline:
                     await vector_store.add_documents(all_chunks, all_metadatas)
                     await hybrid_searcher.update_index(all_chunks, all_metadatas)
                     
-                    # Use absolute path for robustness
-                    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                    vector_dir = os.path.join(base_dir, "data", "vectors", task.id)
+                    # Use centralized absolute path from settings
+                    settings = get_settings()
+                    vector_dir = os.path.join(settings.data_dir, "vectors", task.id)
                     vector_store.save(vector_dir)
                     self.hybrid_searcher = hybrid_searcher
             except Exception as exc:

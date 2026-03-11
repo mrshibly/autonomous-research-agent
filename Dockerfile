@@ -33,7 +33,7 @@ COPY backend/ ./backend
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Ensure data directories exist and are writable by user 1000 (Hugging Face)
-RUN mkdir -p backend/data/uploads backend/data/reports \
+RUN mkdir -p backend/data/uploads backend/data/reports backend/data/vectors \
     && chown -R 1000:1000 /app
 
 USER 1000

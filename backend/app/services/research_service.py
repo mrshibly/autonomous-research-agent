@@ -10,6 +10,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
+from app.database import init_db
 from app.database import async_session
 from app.models.research import Paper, ResearchTask
 from app.orchestrator.pipeline import ResearchPipeline
@@ -229,29 +231,28 @@ async def chat_with_task(
     from app.rag.hybrid_search import HybridSearcher
     from app.utils.llm_client import call_llm
     
-    # Use absolute path for robustness on different platforms
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    vector_dir = os.path.join(base_dir, "data", "vectors", task_id)
+    # Use centralized absolute path from settings
+    settings = get_settings()
+    vector_dir = os.path.join(settings.data_dir, "vectors", task_id)
     
     # Check if data directory exists (system check)
-    data_dir = os.path.join(base_dir, "data")
-    if not os.path.exists(data_dir):
-        logger.error(f"Critical: Data directory missing at {data_dir}")
-        raise RuntimeError("Server configuration error: Data storage missing.")
+    if not os.path.exists(settings.data_dir):
+        logger.error(f"Critical: Data directory missing at {settings.data_dir}")
+        raise RuntimeError(f"Server configuration error: Data storage missing at {settings.data_dir}")
 
     if not os.path.exists(vector_dir):
         logger.warning(f"Vector index not found at {vector_dir} for task {task_id}")
         # Be more specific about WHY it might be missing
         if task.progress < 50:
             raise RuntimeError(f"Indexing in progress ({task.progress}%). Please wait until papers are read.")
-        raise FileNotFoundError(f"Knowledge index missing for task {task_id}. Please restart this research.")
+        raise FileNotFoundError(f"Knowledge index missing. Current Path: {vector_dir}. Please restart research.")
 
     try:
         vector_store = VectorStore()
         vector_store.load(vector_dir)
         
         if not vector_store.documents:
-            raise RuntimeError("Knowledge base is empty. No papers were successfully indexed for this topic.")
+            raise RuntimeError("Knowledge base is empty. No papers were successfully indexed.")
 
         hybrid_searcher = HybridSearcher(vector_store)
         await hybrid_searcher.update_index(

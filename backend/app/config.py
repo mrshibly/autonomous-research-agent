@@ -56,6 +56,17 @@ class Settings(BaseSettings):
     pubmed_email: str = "your-email@example.com"
 
     @property
+    def data_dir(self) -> str:
+        """Absolute path to the project's data directory."""
+        import os
+        # Path to the directory containing this file (backend/app/config.py)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Path to backend directory
+        backend_dir = os.path.dirname(current_dir)
+        # Final absolute path to data (backend/data)
+        return os.path.abspath(os.path.join(backend_dir, "data"))
+
+    @property
     def cors_origin_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""
         return [origin.strip() for origin in self.cors_origins.split(",")]

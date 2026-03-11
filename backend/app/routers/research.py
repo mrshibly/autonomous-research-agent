@@ -233,3 +233,25 @@ async def export_bib(task_id: str, db: AsyncSession = Depends(get_db)):
         media_type="text/plain",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+@router.get("/diag/storage", summary="Diagnostic: List storage contents")
+async def diagnostic_storage():
+    """Lists contents of the data directory for troubleshooting."""
+    import os
+    from app.config import get_settings
+    settings = get_settings()
+    
+    diag_info = {
+        "data_dir": settings.data_dir,
+        "exists": os.path.exists(settings.data_dir),
+        "contents": {}
+    }
+    
+    if diag_info["exists"]:
+        for root, dirs, files in os.walk(settings.data_dir):
+            rel_path = os.path.relpath(root, settings.data_dir)
+            diag_info["contents"][rel_path] = {
+                "dirs": dirs,
+                "files": files
+            }
+            
+    return diag_info
