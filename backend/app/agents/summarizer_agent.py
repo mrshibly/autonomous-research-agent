@@ -75,30 +75,42 @@ class SummarizerAgent(BaseAgent):
         self, title: str, text: str, topic: str
     ) -> str:
         """Generate a summary for a single paper."""
-        prompt = f"""Summarize the following research paper in the context of the topic: "{topic}"
+        prompt = f"""Summarize the research paper: "{title}"
+        
+CONTEXT OF RESEARCH: "{topic}"
 
-Paper Title: {title}
-
-Paper Text:
+CONTENT TO SUMMARIZE:
 {text}
 
-Provide a structured summary with:
-1. **Main Contribution**: What is the key contribution of this paper? (2-3 sentences)
-2. **Methodology**: What approach/method does it use? (2-3 sentences)
-3. **Key Findings**: What are the main results? (2-3 bullet points)
-4. **Relevance**: How does this relate to "{topic}"? (1-2 sentences)
+Please provide a highly structured academic summary using exactly these sections:
 
-Be concise and accurate. Only state what is explicitly in the paper."""
+### 1. Main Contribution
+[2-3 sentences explaining the primary value or discovery]
+
+### 2. Methodology
+[2-3 sentences on the approach, datasets, or techniques used]
+
+### 3. Key Findings
+* [Bullet point 1]
+* [Bullet point 2]
+* [Bullet point 3 (if applicable)]
+
+### 4. Relevance to "{topic}"
+[1-2 sentences explaining why this paper is important for this specific topic]
+
+Ensure the response is clean Markdown. Do not include page numbers, headers, or broken text artifacts."""
 
         try:
             summary = await call_llm(
                 prompt=prompt,
                 system_prompt=(
-                    "You are an expert academic research summarizer. "
-                    "Provide concise, accurate summaries. Never fabricate information."
+                    "You are an expert scientific researcher. Your task is to extract clear, "
+                    "structured knowledge from papers. Avoid academic jargon where possible, "
+                    "but stay technically accurate. Never mention PDF artifacts or software "
+                    "extraction errors."
                 ),
-                temperature=0.2,
-                max_tokens=1024,
+                temperature=0.1,
+                max_tokens=1200,
             )
             return summary
 

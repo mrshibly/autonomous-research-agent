@@ -244,33 +244,7 @@ export default function ResearchView() {
               </h2>
               <div className="papers-grid">
                 {report.papers.map((paper, i) => (
-                  <div className="paper-card" key={paper.id || i}>
-                    <div className="paper-header">
-                      <h4 className="paper-title">{paper.title}</h4>
-                      {paper.relevance_score != null && paper.relevance_score > 0 && (
-                        <span className={`relevance-badge ${paper.relevance_score >= 0.7 ? 'high' : paper.relevance_score >= 0.4 ? 'medium' : 'low'}`}>
-                          {(paper.relevance_score * 100).toFixed(0)}%
-                        </span>
-                      )}
-                    </div>
-                    <p className="paper-authors">
-                      {(() => {
-                        if (!paper.authors) return 'Unknown Authors';
-                        // Split by comma, semicolon, or ' and '
-                        const authors = paper.authors.split(/[,;]| and /);
-                        if (authors.length > 5) {
-                          return authors.slice(0, 5).join(', ') + ' et al.';
-                        }
-                        return paper.authors;
-                      })()}
-                    </p>
-                    <div className="paper-summary">
-                      <ReactMarkdown>{paper.summary || paper.abstract}</ReactMarkdown>
-                    </div>
-                    <a href={paper.url} target="_blank" rel="noopener noreferrer" className="paper-link">
-                      View Paper →
-                    </a>
-                  </div>
+                  <PaperCard key={paper.id || i} paper={paper} />
                 ))}
               </div>
             </section>
@@ -294,6 +268,66 @@ export default function ResearchView() {
 
       {/* Interactive Chat */}
       {status?.status === 'completed' && <ChatSidebar taskId={taskId} />}
+    </div>
+  );
+}
+
+function PaperCard({ paper }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const summary = paper.summary || paper.abstract || '';
+  const isLong = summary.length > 450;
+  
+  const displaySummary = isLong && !isExpanded 
+    ? summary.slice(0, 450) + '...' 
+    : summary;
+
+  return (
+    <div className="paper-card" id={`paper-${paper.id}`}>
+      <div className="paper-card-main">
+        <div className="paper-header">
+          <h4 className="paper-title">{paper.title}</h4>
+          {paper.relevance_score != null && paper.relevance_score > 0 && (
+            <div className="relevance-container">
+              <span className="relevance-label">Relevance</span>
+              <span className={`relevance-badge ${paper.relevance_score >= 0.7 ? 'high' : paper.relevance_score >= 0.4 ? 'medium' : 'low'}`}>
+                {(paper.relevance_score * 100).toFixed(0)}%
+              </span>
+            </div>
+          )}
+        </div>
+        
+        <p className="paper-authors">
+          {(() => {
+            if (!paper.authors) return 'Unknown Authors';
+            const authors = paper.authors.split(/[,;]| and /);
+            if (authors.length > 5) {
+              return authors.slice(0, 5).join(', ') + ' et al.';
+            }
+            return paper.authors;
+          })()}
+        </p>
+
+        <div className={`paper-summary-content ${isExpanded ? 'expanded' : ''}`}>
+          <ReactMarkdown>{displaySummary}</ReactMarkdown>
+        </div>
+
+        <div className="paper-card-footer">
+          <div className="footer-links">
+            <a href={paper.url} target="_blank" rel="noopener noreferrer" className="paper-link-btn">
+              View Source
+            </a>
+            {isLong && (
+              <button 
+                className="read-more-btn"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? 'Show Less' : 'Read Full Summary'}
+              </button>
+            )}
+          </div>
+          <span className="paper-source-tag">{paper.source || 'Scholar'}</span>
+        </div>
+      </div>
     </div>
   );
 }

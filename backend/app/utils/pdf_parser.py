@@ -67,14 +67,58 @@ def _clean_pdf_text(text: str) -> str:
     """Clean common artifacts from PDF-extracted text."""
     import re
 
-    # Remove excessive whitespace while preserving paragraph breaks
+    # 1. Remove excessive horizontal whitespace
     text = re.sub(r"[ \t]+", " ", text)
+
+    # 2. Fix fragmented lines (vertical text artifacts)
+    # If a line is very short (e.g. 1-3 chars) and followed by a newline and more text, 
+    # it's often a line-breaking artifact from two-column layouts.
+    # We join lines that don't end with a sentence terminator and are followed by lowercase.
+    lines = text.split("\n")
+    cleaned_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:
+            cleaned_lines.append("")
+            i += 1
+            continue
+            
+        # Join with next line if this line is short or doesn't end with punctuation
+        # and the next line exists and doesn't start with a capital letter.
+        while i + 1 < len(lines):
+            next_line = lines[i+1].strip()
+            if not next_line:
+                break
+            
+            # Heuristic for joining: 
+            # - Current line is short (< 40 chars)
+            # - OR Doesn't end with punctuation (. ? ! :)
+            # - AND Next line starts with lowercase or common joining word
+            should_join = False
+            if len(line) < 40:
+                should_join = True
+            elif not re.search(r'[.?!:]$', line):
+                should_join = True
+                
+            if should_join and re.match(r'[a-z0-9]', next_line):
+                line = line + " " + next_line
+                i += 1
+            else:
+                break
+        
+        cleaned_lines.append(line)
+        i += 1
+    
+    text = "\n".join(cleaned_lines)
+
+    # 3. Standardize paragraph breaks
     text = re.sub(r"\n{3,}", "\n\n", text)
 
-    # Remove page headers/footers (common patterns)
-    text = re.sub(r"\n\d+\s*\n", "\n", text)  # Standalone page numbers
-
-    # Fix hyphenated line breaks
+    # 4. Remove standalone page numbers and headers
+    text = re.sub(r"\n\d+\s*\n", "\n", text)
+    
+    # 5. Fix hyphenated line breaks (re-run as catch-all)
     text = re.sub(r"(\w)-\s*\n\s*(\w)", r"\1\2", text)
 
     return text.strip()

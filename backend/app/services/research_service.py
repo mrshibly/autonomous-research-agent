@@ -229,54 +229,57 @@ async def chat_with_task(
     from app.rag.hybrid_search import HybridSearcher
     from app.utils.llm_client import call_llm
     
-    vector_dir = f"./data/vectors/{task_id}"
+    # Use absolute path for robustness on different platforms
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    vector_dir = os.path.join(base_dir, "data", "vectors", task_id)
+    
     if not os.path.exists(vector_dir):
-        logger.warning(f"Vector index not found for task {task_id}")
+        logger.warning(f"Vector index not found at {vector_dir} for task {task_id}")
         return None
 
-    vector_store = VectorStore()
-    vector_store.load(vector_dir)
-    hybrid_searcher = HybridSearcher(vector_store)
-    await hybrid_searcher.update_index(
-        [d["text"] for d in vector_store.documents],
-        [d["metadata"] for d in vector_store.documents]
-    )
+    try:
+        vector_store = VectorStore()
+        vector_store.load(vector_dir)
+        hybrid_searcher = HybridSearcher(vector_store)
+        await hybrid_searcher.update_index(
+            [d["text"] for d in vector_store.documents],
+            [d["metadata"] for d in vector_store.documents]
+        )
 
-    # Retrieve context
-    # Use higher top_k for better context coverage
-    results = await hybrid_searcher.search(message, top_k=8)
-    
-    # Filter by similarity if available (optional, depends on model output)
-    valid_results = [res for res in results if res.get("score", 1.0) >= 0.4]
-    if not valid_results and results:
-        valid_results = results[:3] # Fallback to top 3 if all below threshold
+        # Retrieve context
+        results = await hybrid_searcher.search(message, top_k=8)
         
-    context_parts = []
-    for res in valid_results:
-        title = res['metadata'].get('paper_title', 'Unknown Paper')
-        snippet = res['text']
-        context_parts.append(f"--- PAPER: {title} ---\n{snippet}")
-    
-    context = "\n\n".join(context_parts)
+        valid_results = [res for res in results if res.get("score", 1.0) >= 0.35]
+        if not valid_results and results:
+            valid_results = results[:3] 
+            
+        context_parts = []
+        for res in valid_results:
+            title = res['metadata'].get('paper_title', 'Unknown Paper')
+            snippet = res['text']
+            context_parts.append(f"--- PAPER: {title} ---\n{snippet}")
+        
+        context = "\n\n".join(context_parts)
 
-    # Call LLM
-    system_prompt = (
-        f"You are a professional scientific research assistant specialized in '{task.topic}'.\n"
-        "Your goal is to answer questions accurately based ON THE PROVIDED CONTEXT from research papers.\n"
-        "Guidelines:\n"
-        "1. Cite the paper title when mentioning specific findings.\n"
-        "2. If the context doesn't contain the answer, say 'I based my research on the available papers, but I couldn't find specific information on that.'\n"
-        "3. Maintain a technical, objective tone.\n"
-        "4. Be concise but thorough."
-    )
-    user_prompt = f"CONTEXT FROM PAPERS:\n{context}\n\nUSER QUESTION: {message}"
-    
-    answer = await call_llm(user_prompt, system_prompt)
+        # Call LLM
+        system_prompt = (
+            f"You are a professional scientific research assistant specialized in '{task.topic}'.\n"
+            "Answering based ONLY on the provided context.\n"
+            "1. Cite the paper title.\n"
+            "2. If unknown, say you don't have enough data from the papers.\n"
+            "3. Be concise and technical."
+        )
+        user_prompt = f"CONTEXT:\n{context}\n\nUSER: {message}"
+        
+        answer = await call_llm(user_prompt, system_prompt)
 
-    return ChatResponse(
-        answer=answer,
-        sources=[res["metadata"] for res in results]
-    )
+        return ChatResponse(
+            answer=answer,
+            sources=[res["metadata"] for res in results]
+        )
+    except Exception as e:
+        logger.error(f"Chat failed for task {task_id}: {str(e)}")
+        raise RuntimeError(f"Chat processing error: {str(e)}")
 
 
 async def delete_task(db: AsyncSession, task_id: str) -> bool:
