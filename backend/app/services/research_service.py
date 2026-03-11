@@ -233,13 +233,23 @@ async def chat_with_task(
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     vector_dir = os.path.join(base_dir, "data", "vectors", task_id)
     
+    # Check if data directory exists (system check)
+    data_dir = os.path.join(base_dir, "data")
+    if not os.path.exists(data_dir):
+        logger.error(f"Critical: Data directory missing at {data_dir}")
+        raise RuntimeError("Server configuration error: Data storage missing.")
+
     if not os.path.exists(vector_dir):
         logger.warning(f"Vector index not found at {vector_dir} for task {task_id}")
-        return None
+        return None # Router will handle this as 404
 
     try:
         vector_store = VectorStore()
         vector_store.load(vector_dir)
+        
+        if not vector_store.documents:
+            raise RuntimeError("No knowledge base found for this research. Chat is unavailable.")
+
         hybrid_searcher = HybridSearcher(vector_store)
         await hybrid_searcher.update_index(
             [d["text"] for d in vector_store.documents],
@@ -249,7 +259,7 @@ async def chat_with_task(
         # Retrieve context
         results = await hybrid_searcher.search(message, top_k=8)
         
-        valid_results = [res for res in results if res.get("score", 1.0) >= 0.35]
+        valid_results = [res for res in results if res.get("score", 1.0) >= 0.3]
         if not valid_results and results:
             valid_results = results[:3] 
             
@@ -271,12 +281,20 @@ async def chat_with_task(
         )
         user_prompt = f"CONTEXT:\n{context}\n\nUSER: {message}"
         
-        answer = await call_llm(user_prompt, system_prompt)
+        try:
+            answer = await call_llm(user_prompt, system_prompt)
+        except Exception as llm_e:
+            logger.error(f"LLM call failed: {str(llm_e)}")
+            if "rate limit" in str(llm_e).lower() or "429" in str(llm_e):
+                raise RuntimeError("AI model is currently rate-limited. Please try again in 1 minute.")
+            raise RuntimeError(f"AI Service currently unavailable: {str(llm_e)}")
 
         return ChatResponse(
             answer=answer,
             sources=[res["metadata"] for res in results]
         )
+    except RuntimeError:
+        raise
     except Exception as e:
         logger.error(f"Chat failed for task {task_id}: {str(e)}")
         raise RuntimeError(f"Chat processing error: {str(e)}")

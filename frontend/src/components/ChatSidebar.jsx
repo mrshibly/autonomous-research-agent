@@ -36,11 +36,18 @@ export default function ChatSidebar({ taskId }) {
       };
       setChatHistory(prev => [...prev, aiMessage]);
     } catch (err) {
-      const errorMsg = err.message?.toLowerCase();
+      console.error('Chat error:', err);
       let displayError = 'Failed to get answer. Please try again.';
       
-      if (errorMsg.includes('429')) {
-        displayError = 'Queue is currently busy (Rate limit). Retrying in the background...';
+      // If we have a specific error message from the backend, use it
+      if (err.response?.data?.detail) {
+        displayError = err.response.data.detail;
+      } else if (err.message) {
+        if (err.message.includes('429')) {
+          displayError = 'Rate limit exceeded (Groq/OpenAI). Please wait a moment.';
+        } else if (err.message.includes('404')) {
+          displayError = 'Chat context not found. This research data was likely cleared after the last update.';
+        }
       }
       
       setChatHistory(prev => [...prev, { 
