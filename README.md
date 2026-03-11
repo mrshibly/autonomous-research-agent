@@ -1,21 +1,36 @@
 # 🚀 Autonomous AI Research Agent
 
-Welcome to my **Autonomous AI Research Agent**! 
+[![Docker](https://img.shields.io/badge/Docker-Published-blue?logo=docker)](https://hub.docker.com/u/mrshibly)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)](https://reactjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-I built this project to solve a problem I face every day: *information overload*. We are constantly bombarded with new academic papers, articles, and research. Finding the signal in the noise takes hours. I wanted to build an intelligent, multi-agent system that could do the heavy lifting for me—autonomously searching the web, reading complex PDFs, synthesizing the data, and presenting it in a clean, professional report.
-
-This isn't just a basic wrapper around an API; it's a **6-stage autonomous pipeline** featuring hybrid RAG, self-correction loops, and real-time WebSocket communication, all wrapped in a premium, responsive UI.
+An intelligent, multi-agent autonomous system designed to combat information overload by synthesizing academic papers and web data into structured, actionable research reports.
 
 ---
 
-## 🏗️ The Architecture (How it Works)
+## 🌟 Overview
 
-At the core of this platform is a multi-agent orchestrator. I designed it to mimic a real human research team: a planner to define the scope, researchers to gather data, a critic to ensure quality, and a lead writer to compile the final report.
+The **Autonomous AI Research Agent** is a sophisticated 6-stage pipeline that automates the entire research process—from query generation and paper discovery to deep PDF analysis and final synthesis. Unlike standard LLM wrappers, this system employs a **Multi-Agent Orchestrator** with a built-in **Critic Loop** to ensure high-fidelity, hallucination-free output.
 
-Here is a detailed look at the system architecture:
+### 🎥 Visual Tour
+
+```carousel
+![Dashboard Overview](C:\Users\mrshibly\.gemini\antigravity\brain\efd400fc-787c-4fab-95c4-3d940c882adb\research_progress_searching_1773250772555.png)
+<!-- slide -->
+![Mobile Experience](C:\Users\mrshibly\.gemini\antigravity\brain\efd400fc-787c-4fab-95c4-3d940c882adb\mobile_view_report_1773252776439.png)
+<!-- slide -->
+![Technical Report](C:\Users\mrshibly\.gemini\antigravity\brain\efd400fc-787c-4fab-95c4-3d940c882adb\final_verification_responsiveness_search_1773252137893.webp)
+```
+
+---
+
+## 🏗️ Technical Architecture
+
+The platform is built on a distributed micro-agent architecture where specialized AI agents collaborate through a centralized orchestrator.
 
 ```mermaid
-graph TD
+flowchart TD
     %% Styling
     classDef user fill:#6366f1,stroke:#4f46e5,stroke-width:2px,color:#fff,rx:8px,ry:8px
     classDef frontend fill:#14b8a6,stroke:#0d9488,stroke-width:2px,color:#fff,rx:8px,ry:8px
@@ -27,122 +42,124 @@ graph TD
     %% Nodes
     User(("🧑‍💻 User")):::user
     UI["💻 React/Vite Frontend<br>(Dashboard & Chat)"]:::frontend
-    
-    subgraph FastAPI Backend
+
+    subgraph FastAPI_Backend ["FastAPI Backend"]
         API["📡 REST API & WebSockets"]:::backend
         Orchestrator["🎯 Pipeline Orchestrator"]:::backend
-        
-        subgraph Multi-Agent System
+
+        subgraph Multi_Agent_System ["Multi-Agent System"]
             Planner["🧠 Planner Agent<br>(Generates Queries)"]:::agent
             Search["🌐 Search Agent<br>(Web & Academic)"]:::agent
             Paper["📄 Paper Agent<br>(PDF Parsing)"]:::agent
-            Summarizer["📝 Summarizer Agent<br>(Information Extraction)"]:::agent
-            Critic["⚖️ Critic Agent<br>(Relevance Scoring & Feedback)"]:::agent
-            Writer["✍️ Writer Agent<br>(Final JSON Compilation)"]:::agent
+            Summarizer["📝 Summarizer Agent<br>(Info Extraction)"]:::agent
+            Critic["⚖️ Critic Agent<br>(Quality Control)"]:::agent
+            Writer["✍️ Writer Agent<br>(Synthesis)"]:::agent
         end
-        
-        subgraph RAG Pipeline
+
+        subgraph RAG_Pipeline ["RAG Pipeline"]
             Embeddings["🔢 Local Embeddings<br>(sentence-transformers)"]:::db
             FAISS[("🗄️ FAISS Vector Store<br>+ BM25 (Hybrid)")]:::db
         end
-        
+
         SQLite[("💿 SQLite Database<br>(Async SQLAlchemy)")]:::db
     end
-    
+
     Provider["☁️ Groq / OpenAI / Ollama<br>(LLM Core)"]:::external
     Sources["📚 Arxiv / PubMed / Web"]:::external
 
     %% Edges
-    User -- "Enters Topic" --> UI
-    UI -- "HTTP POST" --> API
-    API -- "Starts Task" --> Orchestrator
-    
+    User -- "Requests Research" --> UI
+    UI -- "HTTP/WS" --> API
+    API -- "Triggers" --> Orchestrator
+
     Orchestrator --> Planner
-    Planner -- "Search Queries" --> Search
-    Search -- "Paper Metadata" --> Paper
-    Paper -- "Downloads & Chunks" --> Embeddings
-    Embeddings -- "Stores Vectors" --> FAISS
-    Paper -- "Raw Text" --> Summarizer
-    Summarizer -- "Draft Summaries" --> Critic
-    
-    Critic -- "Iterative Feedback Loop" --> Writer
-    Writer -. "Refines based on feedback" .-> Critic
-    
-    Writer -- "Generates Final Report" --> Orchestrator
-    Orchestrator -- "Real-time Progress updates" --> API
-    API -- "WebSockets" --> UI
-    
-    %% External calls
-    Search -. "Queries" .-> Sources
-    Planner & Summarizer & Critic & Writer -. "LLM Calls (Retry logic)" .-> Provider
-    
+    Planner -- "Directs" --> Search
+    Search -- "Fetches" --> Paper
+    Paper -- "Feeds" --> Embeddings
+    Paper -- "Analyzes" --> Summarizer
+    Summarizer -- "Drafts" --> Critic
+
+    Critic -- "Verified Feedback Loop" --> Writer
+    Writer -- "Refines" --> Critic
+
+    Writer -- "Finalizes" --> Orchestrator
+    Orchestrator -- "Real-time Updates" --> UI
+
     %% Storage
-    Orchestrator -. "Persists State" .-> SQLite
+    Orchestrator -. "Persists" .-> SQLite
 ```
 
 ---
 
-## ✨ Key Technical Highlights
+## 🔥 Key Technical Highlights
 
-If you're an engineer or hiring manager looking at this code, here are the parts I'm most proud of:
+### 1. Unified Hybrid RAG
 
-### 1. The Multi-Agent Orchestrator
-Instead of a single mega-prompt, the system breaks the problem down. The **Critic Agent** genuinely evaluates the **Summarizer Agent's** output against the raw text. If the relevance is low (e.g., `< 30%`), it drops the paper entirely so your final report isn't polluted with noise.
+Utilizes a dual-indexing strategy:
 
-### 2. Hybrid RAG Implementation
-I didn't stop at basic vector search. I implemented a **Hybrid RAG** system that combines dense vector search (using local `sentence-transformers` via **FAISS**) with sparse keyword search (**BM25**). This means we capture both semantic meaning and exact keyword matches when chatting with the documents.
+- **Dense Retrieval**: `all-MiniLM-L6-v2` embeddings stored in a FAISS vector store for semantic similarity.
+- **Sparse Retrieval**: `BM25` keyword indexing for precise term matching.
+- **Result Reranking**: Intelligently combines and ranks results for superior context retrieval during the "Chat with Report" phase.
 
-### 3. Graceful Degradation & Resilience
-LLM APIs fail. They hit rate limits constantly. I built an exponential backoff with jitter directly into the `llm_client.py`. If Groq yells `429 Too Many Requests`, the backend gracefully waits and retries, rather than tanking the entire 10-minute research run.
+### 2. Multi-Agent Critic Loop
 
-### 4. Real-Time WebSockets
-Users hate waiting. The FastAPI backend streams progress updates (like "Evaluating paper 3 of 5") directly to the React frontend via WebSockets, so the fluid, glassmorphic UI is always alive and responsive.
+Features an iterative refinement process where the **Critic Agent** evaluates the **Writer's** output against source documents. If technical accuracy falls below thresholds, the report is autonomously sent back for correction.
+
+### 3. Production-Grade Resilience
+
+- **Smart Retries**: Built-in exponential backoff with jitter for handling LLM rate limits.
+- **Real-Time Visibility**: Full-duplex WebSocket communication provides users with live stage updates and agent reasoning logs.
+- **Optimized Containers**: Backend image reduced from **4.4GB to 599MB** using multi-stage builds and CPU-optimized machine learning libraries.
 
 ---
 
-## 🛠️ Quick Start Guide
+## 🐳 Getting Started (3-Minute Setup)
 
-Want to run it yourself? It's designed to be completely free to run locally (defaults to Groq and local embeddings).
+### 1. Deploy with Docker (Recommended)
 
-### 1. Spin up the Backend (FastAPI)
+The fastest way to get up and running is via Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+- **Web UI**: [http://localhost:8002](http://localhost:8002)
+- **API Docs**: [http://localhost:8001/docs](http://localhost:8001/docs)
+
+### 2. Standard Local Setup
+
+If you prefer running natively:
+
+**Backend**:
 
 ```bash
 cd backend
 python -m venv venv
-
-# Activate (Windows)
-venv\Scripts\activate
-# Activate (Mac/Linux)
-# source venv/bin/activate
-
+# Activate & Install
 pip install -r requirements.txt
-cp .env.example .env
-
-# Edit .env and add your free GROQ_API_KEY
+cp .env.example .env # Add your GROQ_API_KEY
+uvicorn app.main:app --port 8001
 ```
 
-Start the server:
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8001
-```
-
-### 2. Spin up the Frontend (React + Vite)
+**Frontend**:
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --port 8002
 ```
-
-Visit **`http://localhost:8002`** and start researching!
 
 ---
 
-## 💻 Tech Stack
-- **Frontend:** React, Vite, CSS (Glassmorphism), React-Markdown
-- **Backend:** FastAPI, Python, Asyncio, WebSockets
-- **AI/ML:** Langchain concepts, FAISS, `sentence-transformers`, `rank_bm25`, PyMuPDF
-- **Data:** SQLite, SQLAlchemy (Async)
-- **Providers:** Groq (primary), OpenAI, Ollama
+## 🛠️ Tech Stack
 
-Thank you for checking out my project! I built every part of this—from the CSS media queries to the asynchronous LLM retry logic—because I genuinely love building intelligent systems.
+- **Foundations**: React 18, Vite, FastAPI (Python 3.11+)
+- **AI/Agents**: Groq, OpenAI API, Ollama, LangGraph-inspired Orchestration
+- **RAG/ML**: FAISS, Sentence-Transformers, BM25, PyMuPDF
+- **DevOps**: Docker, Multi-stage Builds, GitHub Actions Ready
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
