@@ -1,128 +1,120 @@
 # 🚀 Autonomous AI Research Agent
 
+<div align="center">
+
 [![Docker](https://img.shields.io/badge/Docker-Published-blue?logo=docker)](https://hub.docker.com/u/mrshibly)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)](https://reactjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Live-orange)](https://huggingface.co/spaces/mrshibly/autonomous-research-agent)
+[![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/mrshibly/autonomous-research-agent/graphs/commit-activity)
 
-An **Autonomous Multi-Agent AI System** that researches a topic, analyzes academic papers and web data, and produces **structured, citation-aware research reports automatically**.
+**An Autonomous Multi-Agent AI System that produces high-fidelity, citation-aware research reports automatically.**
 
-Unlike simple LLM wrappers, this system uses a **multi-agent orchestration pipeline with verification loops and hybrid RAG retrieval** to improve factual accuracy and research depth.
+[Overview](#-overview) • [Premium Features](#-premium-features) • [Architecture](#-system-architecture) • [Demo](#-demo) • [Quick Start](#-quick-start)
 
-------------------------------------------------------------------------
+</div>
+
+---
 
 # 🌟 Overview
 
-The **Autonomous AI Research Agent** automates the entire research workflow:
+The **Autonomous AI Research Agent** isn't just another LLM wrapper. It's a coordinated system of specialized agents that orchestrates a full research lifecycle:
 
-1️⃣ Generates research queries  
-2️⃣ Searches academic databases and the web  
-3️⃣ Downloads and parses research papers  
-4️⃣ Extracts key information and findings  
-5️⃣ Verifies outputs with a critic agent  
-6️⃣ Produces a structured final research report
+1.  **Orchestration**: Plans and breaks down complex topics into searchable technical queries.
+2.  **Retrieval**: Searches academic databases (ArXiv, Scholar) and the broader web.
+3.  **Extraction**: Downloads, parses, and cleans content from PDFs and web pages.
+4.  **Verification**: A dedicated Critic Agent audits findings for technical accuracy.
+5.  **Synthesis**: Produces a structured report with cross-referenced citations.
 
-The result is a **high-fidelity research synthesis pipeline** capable of handling complex technical topics.
+---
 
-------------------------------------------------------------------------
+# ✨ Premium Features
 
-# 🎯 Key Features
+### 🎨 High-Fidelity UI/UX
+- **Motion Architecture**: Seamless layout transitions and entrance animations powered by `framer-motion`.
+- **Dynamic Research View**: Real-time progress tracking with high-contrast status indicators.
+- **Glassmorphism Design**: A modern, sleek aesthetic with dark-mode optimization and premium typography.
 
-## 🤖 Multi-Agent Architecture
+### 💬 Intelligent Research Assistant
+- **Context-Aware Chat**: Ask specific questions about the analyzed papers using localized RAG.
+- **Markdown Support**: Rich message rendering for comparison tables, code snippets, and lists.
+- **Session Persistence**: Chat history persists locally, ensuring your findings are never lost.
 
-A coordinated system of specialized AI agents:
+### 🔗 Utility & Sharing
+- **Instant Sharing**: One-click "Copy Link" feature for sharing research insights.
+- **Multi-Format Export**: Download reports as high-quality Markdown or structured PDF-ready text.
+- **Author Filtering**: Intelligent author parsing (et al. support) for clean academic citations.
 
--   **Planner Agent** — generates research queries
--   **Search Agent** — retrieves web and academic sources
--   **Paper Agent** — parses PDFs and extracts text
--   **Summarizer Agent** — extracts technical insights
--   **Critic Agent** — verifies factual accuracy
--   **Writer Agent** — synthesizes the final report
-
-------------------------------------------------------------------------
-
-## 🔍 Hybrid RAG Retrieval
-
-**Dense Retrieval**
-- Sentence-Transformers embeddings
-- FAISS vector database
-- Semantic similarity search
-
-**Sparse Retrieval**
-- BM25 keyword ranking
-
-Results are **reranked and fused** to improve context quality.
-
-------------------------------------------------------------------------
-
-## ⚖️ Critic Verification Loop
-
-Writer → Critic → Revision → Writer
-
-Ensures technical accuracy and reduces hallucinations.
-
-------------------------------------------------------------------------
+---
 
 # 🏗️ System Architecture
 
+### Multi-Agent Pipeline
+The system uses a sequential orchestration model with a verification loop:
+
 ```mermaid
-flowchart TD
-User --> UI
-UI --> API
-
-API --> Orchestrator
-
-Orchestrator --> Planner
-Planner --> Search
-Search --> Paper
-Paper --> Summarizer
-Summarizer --> Critic
-Critic --> Writer
-Writer --> Orchestrator
+flowchart LR
+    A[Planner] -->|Queries| B[Search]
+    B -->|URLs| C[Paper Agent]
+    C -->|Text| D[Summarizer]
+    D -->|Draft| E[Critic]
+    E -->|Feedback| F[Writer]
+    F -->|Revision| E
+    F -->|Final Report| G[Result]
+    
+    style E fill:#f96,stroke:#333
+    style A fill:#4CAF50,color:#fff
+    style G fill:#2196F3,color:#fff
 ```
 
-------------------------------------------------------------------------
+### Hybrid RAG Deep Dive
+Our retrieval system fuses **Dense (Semantic)** and **Sparse (Keyword)** search to capture both conceptual meaning and exact technical terms.
+
+| Component | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Dense Search** | Sentence-Transformers + FAISS | Understanding semantic intent & synonyms |
+| **Sparse Search** | BM25 Ranking | Matching exact IDs, acronyms, and names |
+| **Fusion Layer** | Reciprocal Rank Fusion | Combining best results for high-precision context |
+
+---
 
 # 🛠 Tech Stack
 
-**Frontend**
-- React
-- Vite
+**Frontend**: React 18, Vite, Framer Motion, Axios  
+**Backend**: FastAPI, SQLAlchemy (Async), Pydantic  
+**AI Core**: OpenAI/Groq/Ollama, FAISS, Sentence Transformers, BM25  
+**Infrastructure**: Docker, Hugging Face Spaces, GitHub Actions  
 
-**Backend**
-- FastAPI
-- Async SQLAlchemy
-
-**AI / ML**
-- Groq / OpenAI / Ollama
-- Sentence Transformers
-- FAISS
-- BM25
-- PyMuPDF
-
-**DevOps**
-- Docker
-- Docker Compose
-
-------------------------------------------------------------------------
+---
 
 # 🐳 Quick Start
 
+Prepare your environment with an `.env` file containing your `OPENAI_API_KEY` or `GROQ_API_KEY`.
+
+### Using Docker (Recommended)
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
+- **Dashboard**: [http://localhost:8002](http://localhost:8002)
+- **API Docs**: [http://localhost:8001/docs](http://localhost:8001/docs)
 
-Frontend: http://localhost:8002  
-API Docs: http://localhost:8001/docs
+### Local Development
+1. **Backend**: `cd backend && pip install -r requirements.txt && python run.py`
+2. **Frontend**: `cd frontend && npm install && npm run dev`
 
-------------------------------------------------------------------------
+---
 
-# 👤 Author
+# 👤 Author & Links
 
-**Shibly**
+**Developed by Shibly**
 
-**GitHub**  
-[https://github.com/mrshibly](https://github.com/mrshibly)
+- **GitHub**: [github.com/mrshibly](https://github.com/mrshibly)
+- **HuggingFace**: [mrshibly@HF](https://huggingface.co/mrshibly)
+- **Portfolio**: [Join the Research Revolution](https://huggingface.co/spaces/mrshibly/autonomous-research-agent)
 
-**HuggingFace Space**  
-[https://huggingface.co/spaces/mrshibly/autonomous-research-agent](https://huggingface.co/spaces/mrshibly/autonomous-research-agent)
+---
+
+<div align="center">
+  <sub>Built with ❤️ for the AI Research Community</sub>
+</div>
