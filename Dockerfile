@@ -23,6 +23,13 @@ COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
+# Set Python Path to include current directory
+ENV PYTHONPATH=.
+
+# Set explicit cache directories for models and ensure they are writable
+ENV HF_HOME=/app/backend/data/models
+ENV SENTENCE_TRANSFORMERS_HOME=/app/backend/data/models
+
 # Pre-download the embedding model (baked into image)
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
@@ -33,15 +40,13 @@ COPY backend/ ./backend
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Ensure data directories exist and are writable by user 1000 (Hugging Face)
-RUN mkdir -p backend/data/uploads backend/data/reports backend/data/vectors \
+RUN mkdir -p backend/data/uploads backend/data/reports backend/data/vectors backend/data/models \
     && chown -R 1000:1000 /app
 
 USER 1000
 
 WORKDIR /app/backend
 
-# Set Python Path to include current directory
-ENV PYTHONPATH=.
 # Default port for Hugging Face
 ENV PORT=7860
 

@@ -110,25 +110,47 @@ class ResearchPipeline:
                 
                 all_chunks = []
                 all_metadatas = []
-                for paper in papers:
+                logger.info(f"Indexing started for {len(papers)} papers")
+                
+                for i, paper in enumerate(papers):
                     text = paper.get("full_text") or paper.get("abstract", "")
                     if text:
                         chunks = chunk_text(text)
+                        logger.debug(f"Paper '{paper.get('title', 'Untitled')[:30]}' -> {len(chunks)} chunks")
                         metadata = [{"paper_title": paper.get("title", ""), "paper_url": paper.get("url", "")}] * len(chunks)
                         all_chunks.extend(chunks)
                         all_metadatas.extend(metadata)
+                    else:
+                        logger.warning(f"Paper '{paper.get('title', 'Untitled')[:30]}' has no text/abstract")
                 
                 if all_chunks:
+                    logger.info(f"Total chunks to index: {len(all_chunks)}")
                     await vector_store.add_documents(all_chunks, all_metadatas)
                     await hybrid_searcher.update_index(all_chunks, all_metadatas)
                     
-                    # Use centralized absolute path from settings
                     settings = get_settings()
                     vector_dir = os.path.join(settings.data_dir, "vectors", task.id)
+                    logger.info(f"Attempting to save vector index to: {vector_dir}")
+                    
+                    # Explicitly create directory and check writability
+                    os.makedirs(vector_dir, exist_ok=True)
                     vector_store.save(vector_dir)
+                    
+                    # Verify files exist after save
+                    if os.path.exists(os.path.join(vector_dir, "index.faiss")):
+                        logger.info(f"Successfully saved FAISS index to {vector_dir}")
+                    else:
+                        logger.error(f"FAISS index file missing after save attempt in {vector_dir}")
+                        
                     self.hybrid_searcher = hybrid_searcher
+                else:
+                    logger.warning("No papers were successfully indexed. Chat will be unavailable.")
             except Exception as exc:
-                logger.error(f"RAG indexing failed: {exc}")
+                logger.error(f"CRITICAL RAG indexing failure: {exc}", exc_info=True)
+                # Don't swallow critical errors if they relate to missing dependencies
+                if "faiss" in str(exc).lower():
+                    task.error_message = f"RAG System Error: {exc}"
+                    await self.db.commit()
 
             await self._update_status(task, "indexing", 50)
 
