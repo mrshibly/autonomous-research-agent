@@ -3,6 +3,7 @@ Research pipeline orchestrator — coordinates all agents in sequence.
 """
 
 from datetime import datetime, timezone
+import os
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -119,10 +120,14 @@ class ResearchPipeline:
                 if all_chunks:
                     await vector_store.add_documents(all_chunks, all_metadatas)
                     await hybrid_searcher.update_index(all_chunks, all_metadatas)
-                    vector_store.save(f"./data/vectors/{task.id}")
+                    
+                    # Use absolute path for robustness
+                    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                    vector_dir = os.path.join(base_dir, "data", "vectors", task.id)
+                    vector_store.save(vector_dir)
                     self.hybrid_searcher = hybrid_searcher
             except Exception as exc:
-                logger.warning(f"RAG indexing failed: {exc}")
+                logger.error(f"RAG indexing failed: {exc}")
 
             await self._update_status(task, "indexing", 50)
 

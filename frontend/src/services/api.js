@@ -14,12 +14,16 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error.response?.data?.detail ||
-      error.message ||
-      'An unexpected error occurred.';
+    const detail = error.response?.data?.detail;
+    const message = detail || error.message || 'An unexpected error occurred.';
     console.error('API Error:', message);
-    return Promise.reject(new Error(message));
+    
+    // Attach response to help UI components extract specific codes/details
+    const enhancedError = new Error(message);
+    enhancedError.response = error.response;
+    enhancedError.status = error.response?.status;
+    
+    return Promise.reject(enhancedError);
   }
 );
 
