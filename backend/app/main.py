@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+import os
 from loguru import logger
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -72,8 +74,23 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────
-
+ 
 app.include_router(research_router, prefix="/api/v1")
+ 
+# ── Static Files (Frontend) ───────────────────────────────────────
+ 
+# If running in production/docker, serve the built frontend
+# We look for the dist folder in a few possible relative locations
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
+if not os.path.exists(frontend_dist):
+    # Fallback for alternative structures
+    frontend_dist = "/app/frontend/dist"
+
+if os.path.exists(frontend_dist):
+    logger.info(f"🌐 Serving frontend from {frontend_dist}")
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+else:
+    logger.warning("⚠️ Frontend dist folder not found. API-only mode.")
 
 
 # ── Health Check ──────────────────────────────────────────────────
