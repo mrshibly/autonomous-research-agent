@@ -38,13 +38,15 @@ RUN mkdir -p backend/data/uploads backend/data/reports \
 
 USER 1000
 
-# Set Python Path to include backend folder
-ENV PYTHONPATH=/app/backend
+WORKDIR /app/backend
+
+# Set Python Path to include current directory
+ENV PYTHONPATH=.
 # Default port for Hugging Face
 ENV PORT=7860
 
 # Port for Hugging Face Spaces
 EXPOSE 7860
 
-# Start unified app (FastAPI serves both API and Static Frontend)
+# Start unified app (FastAPI serves both API and Static Frontend from /app/frontend/dist)
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]

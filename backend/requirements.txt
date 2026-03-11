@@ -2,6 +2,7 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 python-multipart==0.0.20
+aiofiles==24.1.0
 
 # Database
 sqlalchemy==2.0.36
@@ -42,7 +43,7 @@ pytest-asyncio==0.25.0
 httpx==0.28.1
 
 # Utilities
-# Advanced Features
+loguru==0.7.3
 rank_bm25==0.2.2
 biopython==1.85
 fpdf2==2.8.2
