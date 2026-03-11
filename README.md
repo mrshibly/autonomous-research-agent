@@ -1,3 +1,12 @@
+---
+title: Autonomous AI Research Agent
+emoji: 🚀
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # 🚀 Autonomous AI Research Agent
 
 [![Docker](https://img.shields.io/badge/Docker-Published-blue?logo=docker)](https://hub.docker.com/u/mrshibly)
