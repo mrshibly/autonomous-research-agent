@@ -221,7 +221,7 @@ async def chat_with_task(
     result = await db.execute(stmt)
     task = result.scalar_one_or_none()
 
-    if task is None or task.status != "completed":
+    if task is None:
         return None
 
     # Load VectorStore and HybridSearcher
