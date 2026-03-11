@@ -126,7 +126,14 @@ docker-compose up -d
 - **Web UI**: [http://localhost:8002](http://localhost:8002)
 - **API Docs**: [http://localhost:8001/docs](http://localhost:8001/docs)
 
-### 2. Standard Local Setup
+### 2. Manual Image Pull (Docker Hub)
+
+You can also pull the official pre-built images directly:
+*   **Backend**: `docker pull mrshibly/autonomous-research-agent-backend:latest`
+*   **Frontend**: `docker pull mrshibly/autonomous-research-agent-frontend:latest`
+
+### 3. Standard Local Setup
+
 
 If you prefer running natively:
 
