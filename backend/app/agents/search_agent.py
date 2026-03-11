@@ -80,17 +80,27 @@ class SearchAgent(BaseAgent):
             import arxiv
 
             client = arxiv.Client()
+            # Use field-specific query for better relevance
+            # ti: Title, abs: Abstract, cat: Category
+            # Broaden query but keep category filters for high signal-to-noise
+            query = f'({topic}) AND (cat:cs.AI OR cat:cs.CL OR cat:cs.LG OR cat:cs.IR OR cat:cs.CV OR cat:cs.NE)'
             search = arxiv.Search(
-                query=topic,
+                query=query,
                 max_results=max_results,
                 sort_by=arxiv.SortCriterion.Relevance,
             )
 
             papers = []
             for result in client.results(search):
+                authors = [a.name for a in result.authors]
+                if len(authors) > 5:
+                    authors_str = ", ".join(authors[:5]) + " et al."
+                else:
+                    authors_str = ", ".join(authors)
+
                 papers.append({
                     "title": result.title,
-                    "authors": ", ".join(a.name for a in result.authors),
+                    "authors": authors_str,
                     "url": result.pdf_url or result.entry_id,
                     "abstract": result.summary,
                     "source": "arxiv",
@@ -161,9 +171,18 @@ class SearchAgent(BaseAgent):
 
             papers = []
             for r in data.get("organic_results", []):
+                authors = r.get("publication_info", {}).get("authors", [])
+                if isinstance(authors, list):
+                    if len(authors) > 5:
+                        authors_str = ", ".join(authors[:5]) + " et al."
+                    else:
+                        authors_str = ", ".join(authors)
+                else:
+                    authors_str = authors
+                
                 papers.append({
                     "title": r.get("title", "Untitled"),
-                    "authors": r.get("publication_info", {}).get("authors", None),
+                    "authors": authors_str,
                     "url": r.get("link", ""),
                     "abstract": r.get("snippet", ""),
                     "source": "serpapi",
@@ -202,9 +221,15 @@ class SearchAgent(BaseAgent):
 
             papers = []
             for r in records:
+                authors = r.get("AuthorList", [])
+                if len(authors) > 5:
+                    authors_str = ", ".join(authors[:5]) + " et al."
+                else:
+                    authors_str = ", ".join(authors)
+
                 papers.append({
                     "title": r.get("Title", "Untitled"),
-                    "authors": ", ".join(r.get("AuthorList", [])),
+                    "authors": authors_str,
                     "url": f"https://pubmed.ncbi.nlm.nih.gov/{r.get('Id', '')}/",
                     "abstract": r.get("FullJournalName", ""), 
                     "source": "pubmed",

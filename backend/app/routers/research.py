@@ -144,7 +144,16 @@ async def chat_with_research(
     Chat with the AI about the specifics of the researched papers.
     Uses the task-specific RAG index for grounding.
     """
-    result = await research_service.chat_with_task(db, task_id, body.message)
+    try:
+        result = await research_service.chat_with_task(db, task_id, body.message)
+    except RuntimeError as e:
+        if "429" in str(e) or "attempts" in str(e) or "rate limit" in str(e).lower():
+            raise HTTPException(
+                status_code=429, 
+                detail="LLM Provider Rate Limit exceeded. Please wait a minute and try again."
+            )
+        raise HTTPException(status_code=500, detail=f"AI Service Error: {str(e)}")
+        
     if result is None:
         raise HTTPException(
             status_code=404, 

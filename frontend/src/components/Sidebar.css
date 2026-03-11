@@ -133,20 +133,52 @@
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar {
-    width: 70px;
-    padding: 1rem 0.5rem;
+    width: 100%;
+    height: auto;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    padding: 0.5rem 1rem;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    border-right: none;
+    border-top: 1px solid var(--border-glass);
+    justify-content: space-around;
+    align-items: center;
   }
+  
+  .sidebar-header,
+  .sidebar-footer,
   .logo-text,
   .nav-label,
   .sidebar-badge span,
   .logo-subtitle {
     display: none;
   }
+  
   .sidebar-logo {
+    padding: 0;
+  }
+  
+  .sidebar-nav {
+    flex-direction: row;
+    gap: 1rem;
+    flex: 1;
     justify-content: center;
   }
+  
   .nav-item {
-    justify-content: center;
-    padding: 0.75rem;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .nav-indicator {
+    left: 50%;
+    top: auto;
+    bottom: -0.5rem;
+    width: 30px;
+    height: 3px;
+    transform: translateX(-50%);
+    border-radius: 3px 3px 0 0;
   }
 }

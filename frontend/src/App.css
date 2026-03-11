@@ -17,6 +17,7 @@
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
   .app-main {
-    margin-left: 70px;
+    margin-left: 0;
+    padding-bottom: 70px; /* Space for bottom nav */
   }
 }

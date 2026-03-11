@@ -43,7 +43,7 @@ class PlannerAgent(BaseAgent):
         user_prompt = f"Topic: {topic}\n\nQueries (JSON list):"
         
         try:
-            response = await call_llm(system_prompt, user_prompt)
+            response = await call_llm(prompt=user_prompt, system_prompt=system_prompt)
             
             # Extract JSON list
             match = re.search(r"(\[.*\])", response, re.DOTALL)

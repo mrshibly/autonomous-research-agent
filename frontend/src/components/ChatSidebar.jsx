@@ -36,9 +36,16 @@ export default function ChatSidebar({ taskId }) {
       };
       setChatHistory(prev => [...prev, aiMessage]);
     } catch (err) {
+      const errorMsg = err.message?.toLowerCase();
+      let displayError = 'Failed to get answer. Please try again.';
+      
+      if (errorMsg.includes('429')) {
+        displayError = 'Queue is currently busy (Rate limit). Retrying in the background...';
+      }
+      
       setChatHistory(prev => [...prev, { 
         role: 'system', 
-        content: 'Failed to get answer. Please try again.' 
+        content: displayError 
       }]);
     } finally {
       setLoading(false);

@@ -43,7 +43,17 @@ class CriticAgent(BaseAgent):
             source_text = paper.get("full_text") or paper.get("abstract", "")
 
             if not summary or "Insufficient" in summary or "failed" in summary.lower():
-                paper["relevance_score"] = 0.0
+                # Still try to score using the abstract if available
+                if source_text and len(source_text.strip()) > 50:
+                    score = await self._evaluate_paper(
+                        title=paper.get("title", ""),
+                        summary=source_text[:2000],
+                        source_text=source_text[:3000],
+                        topic=topic,
+                    )
+                    paper["relevance_score"] = score
+                else:
+                    paper["relevance_score"] = 0.1
                 evaluated_papers.append(paper)
                 continue
 
@@ -142,11 +152,11 @@ Source Text (excerpt):
 
 Rate this paper on a scale of 0.0 to 1.0 based on:
 1. **Accuracy** (0-0.3): Is the summary faithful to the source? No hallucinations?
-2. **Relevance** (0-0.4): How relevant is this paper to the research topic?
-3. **Quality** (0-0.3): Is the summary clear, informative, and well-structured?
+2. **Strict Relevance** (0-0.4): How specifically does this paper address the research topic "{topic}"? Be very strict. If it is only tangentially related or from a different field (even if it shares keywords), give 0.0 for this part.
+3. **Scholar Quality** (0-0.3): Technical depth and clarity.
 
 RESPOND WITH ONLY A SINGLE NUMBER between 0.0 and 1.0 (the total score).
-Do not include any other text."""
+Do not include any other text. If evaluation fails or is impossible, return 0.1."""
 
         try:
             response = await call_llm(
@@ -164,8 +174,8 @@ Do not include any other text."""
             return max(0.0, min(1.0, score))
 
         except (ValueError, IndexError):
-            logger.warning(f"Could not parse critic score for '{title}', defaulting to 0.5")
-            return 0.5
+            logger.warning(f"Could not parse critic score for '{title}', defaulting to 0.1")
+            return 0.1
         except Exception as exc:
             logger.error(f"Critic evaluation failed for '{title}': {exc}")
-            return 0.5
+            return 0.1

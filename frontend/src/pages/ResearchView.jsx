@@ -10,6 +10,8 @@ import { getResearchReport } from '../services/api';
 import ProgressTracker from '../components/ProgressTracker';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ChatSidebar from '../components/ChatSidebar';
+import ReactMarkdown from 'react-markdown';
+import { API_BASE_URL } from '../services/api';
 import './ResearchView.css';
 
 export default function ResearchView() {
@@ -36,7 +38,7 @@ export default function ResearchView() {
   const handleExport = async (type) => {
     try {
       setReportLoading(true);
-      const url = `/api/v1/research/${taskId}/export/${type}`;
+      const url = `${API_BASE_URL}/research/${taskId}/export/${type}`;
       const response = await fetch(url);
       
       if (!response.ok) throw new Error('Download failed');
@@ -164,7 +166,9 @@ export default function ResearchView() {
             <h2 className="report-section-title">
               <span className="section-emoji">📋</span> Executive Summary
             </h2>
-            <div className="report-text">{report.summary}</div>
+            <div className="report-text">
+              <ReactMarkdown>{report.summary}</ReactMarkdown>
+            </div>
           </section>
 
           {/* Key Techniques */}
@@ -177,7 +181,7 @@ export default function ResearchView() {
                 {report.key_techniques.map((tech, i) => (
                   <li key={i} className="technique-item">
                     <span className="technique-dot" />
-                    {tech}
+                    <ReactMarkdown components={{ p: 'span' }}>{tech}</ReactMarkdown>
                   </li>
                 ))}
               </ul>
@@ -203,10 +207,10 @@ export default function ResearchView() {
                   <tbody>
                     {report.comparison_table.map((row, i) => (
                       <tr key={i}>
-                        <td className="method-cell">{row.method}</td>
-                        <td>{row.description}</td>
-                        <td className="strength-cell">{row.strengths}</td>
-                        <td className="limitation-cell">{row.limitations}</td>
+                        <td className="method-cell"><ReactMarkdown components={{ p: 'span' }}>{row.method}</ReactMarkdown></td>
+                        <td><ReactMarkdown components={{ p: 'span' }}>{row.description}</ReactMarkdown></td>
+                        <td className="strength-cell"><ReactMarkdown components={{ p: 'span' }}>{row.strengths}</ReactMarkdown></td>
+                        <td className="limitation-cell"><ReactMarkdown components={{ p: 'span' }}>{row.limitations}</ReactMarkdown></td>
                       </tr>
                     ))}
                   </tbody>
@@ -225,7 +229,7 @@ export default function ResearchView() {
                 {report.future_directions.map((dir, i) => (
                   <li key={i} className="direction-item">
                     <span className="direction-number">{i + 1}</span>
-                    {dir}
+                    <div className="direction-text"><ReactMarkdown components={{ p: 'span' }}>{dir}</ReactMarkdown></div>
                   </li>
                 ))}
               </ul>
@@ -243,14 +247,26 @@ export default function ResearchView() {
                   <div className="paper-card" key={paper.id || i}>
                     <div className="paper-header">
                       <h4 className="paper-title">{paper.title}</h4>
-                      {paper.relevance_score != null && (
-                        <span className={`relevance-badge ${paper.relevance_score >= 0.7 ? 'high' : 'medium'}`}>
+                      {paper.relevance_score != null && paper.relevance_score > 0 && (
+                        <span className={`relevance-badge ${paper.relevance_score >= 0.7 ? 'high' : paper.relevance_score >= 0.4 ? 'medium' : 'low'}`}>
                           {(paper.relevance_score * 100).toFixed(0)}%
                         </span>
                       )}
                     </div>
-                    <p className="paper-authors">{paper.authors}</p>
-                    <p className="paper-summary">{paper.summary || paper.abstract}</p>
+                    <p className="paper-authors">
+                      {(() => {
+                        if (!paper.authors) return 'Unknown Authors';
+                        // Split by comma, semicolon, or ' and '
+                        const authors = paper.authors.split(/[,;]| and /);
+                        if (authors.length > 5) {
+                          return authors.slice(0, 5).join(', ') + ' et al.';
+                        }
+                        return paper.authors;
+                      })()}
+                    </p>
+                    <div className="paper-summary">
+                      <ReactMarkdown>{paper.summary || paper.abstract}</ReactMarkdown>
+                    </div>
                     <a href={paper.url} target="_blank" rel="noopener noreferrer" className="paper-link">
                       View Paper →
                     </a>

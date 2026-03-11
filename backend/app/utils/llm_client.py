@@ -72,20 +72,37 @@ async def call_llm(
     Returns:
         The LLM's text response.
     """
-    client, model = get_llm_client()
+    import asyncio
+    import random
+    
+    max_retries = 3
+    retry_delay = 4 # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # Re-get client each time in case of connection issues
+            client, model = get_llm_client()
+            
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content.strip()
 
-    try:
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content.strip()
-
-    except Exception as exc:
-        logger.error(f"LLM call failed: {exc}")
-        raise RuntimeError(f"LLM call failed: {exc}") from exc
+        except Exception as exc:
+            error_msg = str(exc).lower()
+            if "429" in error_msg or "rate_limit" in error_msg:
+                if attempt < max_retries - 1:
+                    wait_time = (retry_delay * (2 ** attempt)) + random.uniform(0, 2)
+                    logger.warning(f"Rate limit hit (429). Retrying in {wait_time:.2f}s... (Attempt {attempt+1}/{max_retries})")
+                    await asyncio.sleep(wait_time)
+                    continue
+            
+            logger.error(f"LLM call failed on attempt {attempt+1}: {exc}")
+            if attempt == max_retries - 1:
+                raise RuntimeError(f"LLM call failed after {max_retries} attempts: {exc}") from exc

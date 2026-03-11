@@ -50,7 +50,7 @@ class HybridSearcher:
         combined_results = []
         
         # We need a map of chunk_text -> vector_score
-        vector_score_map = {res["content"]: res["score"] for res in vector_results}
+        vector_score_map = {res["text"]: res["score"] for res in vector_results}
         
         for i, chunk in enumerate(self.chunks):
             v_score = vector_score_map.get(chunk, 0.5) # Default to 0.5 if not in vector top results
@@ -60,7 +60,7 @@ class HybridSearcher:
             
             if combined_score > 0.3: # Threshold
                 combined_results.append({
-                    "content": chunk,
+                    "text": chunk,
                     "metadata": self.metadatas[i],
                     "score": float(combined_score),
                     "vector_score": float(v_score),

@@ -136,6 +136,33 @@ class ResearchPipeline:
             await self._update_status(task, "evaluating", 70)
             critic_result = await self.critic_agent.run({"papers": papers, "topic": topic})
             papers = critic_result.get("papers", papers)
+
+            # ── Filter out irrelevant papers ───────────────────────
+            pre_filter_count = len(papers)
+            # Increase threshold to 0.3 for a more strict selection
+            papers = [p for p in papers if p.get("relevance_score", 0) >= 0.3]
+            
+            # Metadata cleanup (authors, titles, etc.)
+            for p in papers:
+                if not p.get("authors"):
+                    p["authors"] = "Unknown Authors"
+                # Ensure it's a string
+                if isinstance(p["authors"], list):
+                    p["authors"] = ", ".join(str(a) for a in p["authors"])
+                
+                # Title cleanup
+                if p.get("title"):
+                    p["title"] = p["title"].strip()
+                else:
+                    p["title"] = "Untitled Paper"
+
+            if papers:
+                logger.info(f"Relevance filter: kept {len(papers)}/{pre_filter_count} papers (score >= 0.3)")
+            else:
+                # If all papers were filtered, keep the top 3 by score
+                papers = sorted(critic_result.get("papers", []), key=lambda p: p.get("relevance_score", 0), reverse=True)[:3]
+                logger.warning(f"All papers scored below threshold; keeping top {len(papers)}")
+
             await self._update_status(task, "evaluating", 75)
 
             # ── Stage 6: Iterative Report Writing ─────────────────

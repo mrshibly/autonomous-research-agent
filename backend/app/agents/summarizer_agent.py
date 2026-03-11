@@ -41,7 +41,12 @@ class SummarizerAgent(BaseAgent):
             text = paper.get("full_text") or paper.get("abstract", "")
 
             if not text or len(text.strip()) < 50:
-                paper["summary"] = "Insufficient text available for summarization."
+                # Use the abstract as a fallback summary if available
+                abstract = paper.get("abstract", "")
+                if abstract and len(abstract.strip()) >= 50:
+                    paper["summary"] = abstract
+                else:
+                    paper["summary"] = "Insufficient text available for summarization."
                 summarized_papers.append(paper)
                 continue
 

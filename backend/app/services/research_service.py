@@ -243,18 +243,35 @@ async def chat_with_task(
     )
 
     # Retrieve context
-    results = await hybrid_searcher.search(message, top_k=5)
-    context = "\n\n".join([f"Source: {res['metadata'].get('paper_title')}\nContent: {res['content']}" for res in results])
+    # Use higher top_k for better context coverage
+    results = await hybrid_searcher.search(message, top_k=8)
+    
+    # Filter by similarity if available (optional, depends on model output)
+    valid_results = [res for res in results if res.get("score", 1.0) >= 0.4]
+    if not valid_results and results:
+        valid_results = results[:3] # Fallback to top 3 if all below threshold
+        
+    context_parts = []
+    for res in valid_results:
+        title = res['metadata'].get('paper_title', 'Unknown Paper')
+        snippet = res['text']
+        context_parts.append(f"--- PAPER: {title} ---\n{snippet}")
+    
+    context = "\n\n".join(context_parts)
 
     # Call LLM
     system_prompt = (
-        f"You are a scientific research assistant. You are helping a user explore a research report on '{task.topic}'.\n"
-        "Use the provided context from research papers to answer the user's question.\n"
-        "If you don't know the answer, say so. Be concise and technical."
+        f"You are a professional scientific research assistant specialized in '{task.topic}'.\n"
+        "Your goal is to answer questions accurately based ON THE PROVIDED CONTEXT from research papers.\n"
+        "Guidelines:\n"
+        "1. Cite the paper title when mentioning specific findings.\n"
+        "2. If the context doesn't contain the answer, say 'I based my research on the available papers, but I couldn't find specific information on that.'\n"
+        "3. Maintain a technical, objective tone.\n"
+        "4. Be concise but thorough."
     )
-    user_prompt = f"Context:\n{context}\n\nQuestion: {message}"
+    user_prompt = f"CONTEXT FROM PAPERS:\n{context}\n\nUSER QUESTION: {message}"
     
-    answer = await call_llm(system_prompt, user_prompt)
+    answer = await call_llm(user_prompt, system_prompt)
 
     return ChatResponse(
         answer=answer,
