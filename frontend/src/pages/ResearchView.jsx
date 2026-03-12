@@ -147,15 +147,25 @@ export default function ResearchView() {
             {report && (
               <div className="export-actions">
                 <button 
-                  className="download-btn secondary" 
+                  className="export-btn pdf" 
                   onClick={() => handleExport('pdf')}
-                  title="Download PDF"
+                  title="Download Professional PDF"
                 >
                   <HiOutlineDocumentArrowDown /> PDF
                 </button>
-                <button className="download-btn" onClick={handleDownload} id="download-report-btn">
-                  <HiOutlineDocumentArrowDown />
-                  Markdown
+                <button 
+                  className="export-btn markdown" 
+                  onClick={() => handleExport('markdown')}
+                  title="Download Markdown Report"
+                >
+                  <HiOutlineDocumentArrowDown /> Markdown
+                </button>
+                <button 
+                  className="export-btn bibtex" 
+                  onClick={() => handleExport('bibtex')}
+                  title="Download BibTeX Citations"
+                >
+                  <HiOutlineDocumentArrowDown /> BibTeX
                 </button>
               </div>
             )}

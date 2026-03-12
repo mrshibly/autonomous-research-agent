@@ -6,6 +6,7 @@ import {
   HiOutlineSparkles,
   HiOutlineLink,
 } from 'react-icons/hi2';
+import { FaGithub, FaLinkedin } from 'react-icons/fa6';
 import './Sidebar.css';
 
 const navItems = [
@@ -52,13 +53,12 @@ export default function Sidebar() {
       <div className="sidebar-footer">
         <div className="social-links">
           <a href="https://github.com/mrshibly" target="_blank" rel="noopener noreferrer" className="social-link" title="GitHub">
-            <HiOutlineSparkles className="badge-icon" />
-            <span>@mrshibly</span>
+            <FaGithub className="social-brand-icon" />
+            <span>mrshibly</span>
           </a>
-          <div className="social-divider" />
           <a href="https://linkedin.com/in/mrshibly" target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn">
-             <HiOutlineLink className="badge-icon" />
-             <span>LinkedIn</span>
+             <FaLinkedin className="social-brand-icon" />
+             <span>mrshibly</span>
           </a>
         </div>
       </div>

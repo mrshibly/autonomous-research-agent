@@ -112,22 +112,55 @@
 
 /* ── Footer ──────────────────────────────────────── */
 .sidebar-footer {
-  padding-top: 1rem;
+  padding: 1.25rem 0.75rem;
   border-top: 1px solid var(--border-glass);
+  margin-top: auto;
 }
 
-.sidebar-badge {
+.social-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
 }
 
-.badge-icon {
-  color: var(--accent-amber);
-  font-size: 0.9rem;
+.social-link:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-glass);
+  transform: translateY(-2px);
+}
+
+.social-brand-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.social-brand-icon.fa-github {
+  color: #fff;
+}
+
+.social-brand-icon.fa-linkedin {
+  color: #0077b5;
+}
+
+.social-link:hover .social-brand-icon {
+  transform: scale(1.1);
 }
 
 /* ── Responsive ──────────────────────────────────── */
