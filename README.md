@@ -1,3 +1,12 @@
+---
+title: Autonomous AI Research Agent
+emoji: 🚀
+colorFrom: indigo
+colorTo: cyan
+sdk: docker
+pinned: false
+---
+
 # 🚀 Autonomous AI Research Agent
 
 <div align="center">
