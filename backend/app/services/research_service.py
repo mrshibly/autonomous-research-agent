@@ -240,7 +240,7 @@ async def _rebuild_vector_index(db: AsyncSession, task_id: str, vector_dir: str)
     for paper in task.papers:
         text = paper.summary or paper.abstract or ""
         if text.strip():
-            chunks = chunk_text(text, chunk_size=500, overlap=50)
+            chunks = chunk_text(text, chunk_size=500, chunk_overlap=50)
             metadata = [{"paper_title": paper.title or "", "paper_url": paper.url or ""}] * len(chunks)
             all_chunks.extend(chunks)
             all_metadatas.extend(metadata)

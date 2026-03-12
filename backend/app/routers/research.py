@@ -209,7 +209,7 @@ async def export_markdown(task_id: str, db: AsyncSession = Depends(get_db)):
     
     return Response(
         content=md_content,
-        media_type="text/markdown",
+        media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
@@ -230,7 +230,7 @@ async def export_bib(task_id: str, db: AsyncSession = Depends(get_db)):
     filename = f"citations_{task_id[:8]}.bib"
     return Response(
         content=bib_content,
-        media_type="text/plain",
+        media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 @router.get("/diag/storage", summary="Diagnostic: List storage contents")
