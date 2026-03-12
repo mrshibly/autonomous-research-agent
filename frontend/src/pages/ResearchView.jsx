@@ -186,7 +186,7 @@ export default function ResearchView() {
               title="Copy shareable report link"
             >
               {copySuccess ? <HiOutlineCheck /> : <HiOutlineLink />}
-              {copySuccess ? 'Link Copied!' : 'Share Report'}
+              {copySuccess ? 'Copied!' : 'Share'}
             </button>
           </div>
         </div>
