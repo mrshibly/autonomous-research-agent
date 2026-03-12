@@ -149,14 +149,36 @@
   }
   
   .sidebar-header,
-  .sidebar-footer,
-  .logo-text,
-  .nav-label,
-  .sidebar-badge span,
-  .logo-subtitle {
+  .logo-subtitle,
+  .nav-label {
     display: none;
   }
-  
+
+  .sidebar-footer {
+    display: block;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .social-links {
+    flex-direction: row;
+    gap: 1.25rem;
+    padding: 0;
+  }
+
+  .social-link span {
+    display: none;
+  }
+
+  .social-link {
+    font-size: 1.1rem;
+    padding: 0.5rem;
+  }
+
+  .social-divider {
+    display: none;
+  }
+
   .sidebar-logo {
     padding: 0;
   }

@@ -55,8 +55,9 @@ export default function Sidebar() {
             <span>@mrshibly</span>
           </a>
           <div className="social-divider" />
-          <a href="https://linkedin.com/in/mrshibly" target="_blank" rel="noopener noreferrer" className="social-link">
-             LinkedIn
+          <a href="https://linkedin.com/in/mrshibly" target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn">
+             <HiOutlineLink className="badge-icon" />
+             <span>LinkedIn</span>
           </a>
         </div>
       </div>
