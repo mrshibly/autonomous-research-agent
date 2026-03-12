@@ -4,6 +4,7 @@ import {
   HiOutlineClock,
   HiOutlineBeaker,
   HiOutlineSparkles,
+  HiOutlineLink,
 } from 'react-icons/hi2';
 import './Sidebar.css';
 
