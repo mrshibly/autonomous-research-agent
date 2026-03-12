@@ -111,7 +111,7 @@ def generate_pdf_report(report_data: dict, task_topic: str) -> str:
         pdf.ln(3)
         pdf.set_font("helvetica", "", 11)
         pdf.set_text_color(51, 65, 85) # Slate 700
-        pdf.multi_cell(effective_width, 7, sanitize_text_for_pdf(report_data.get("summary", "")))
+        pdf.multi_cell(effective_width, 7, sanitize_text_for_pdf(report_data.get("summary", "")), new_x="LMARGIN", new_y="NEXT")
         pdf.ln(8)
 
         # Key Techniques
@@ -123,7 +123,7 @@ def generate_pdf_report(report_data: dict, task_topic: str) -> str:
         pdf.set_font("helvetica", "", 11)
         pdf.set_text_color(51, 65, 85)
         for tech in report_data.get("key_techniques", []):
-            pdf.multi_cell(effective_width, 8, f"  -  {sanitize_text_for_pdf(tech)}")
+            pdf.multi_cell(effective_width, 8, f"  -  {sanitize_text_for_pdf(tech)}", new_x="LMARGIN", new_y="NEXT")
         pdf.ln(8)
         
         # Future Directions
@@ -136,7 +136,7 @@ def generate_pdf_report(report_data: dict, task_topic: str) -> str:
             pdf.set_font("helvetica", "", 11)
             pdf.set_text_color(51, 65, 85)
             for i, dir in enumerate(report_data.get("future_directions", []), 1):
-                pdf.multi_cell(effective_width, 8, f"  {i}. {sanitize_text_for_pdf(dir)}")
+                pdf.multi_cell(effective_width, 8, f"  {i}. {sanitize_text_for_pdf(dir)}", new_x="LMARGIN", new_y="NEXT")
             pdf.ln(8)
 
         # References
@@ -148,7 +148,7 @@ def generate_pdf_report(report_data: dict, task_topic: str) -> str:
         pdf.set_font("helvetica", "", 9)
         pdf.set_text_color(100, 116, 139) # Slate 500
         for ref in report_data.get("references", []):
-            pdf.multi_cell(effective_width, 5, sanitize_text_for_pdf(f"  [+] {ref}"))
+            pdf.multi_cell(effective_width, 5, sanitize_text_for_pdf(f"  [+] {ref}"), new_x="LMARGIN", new_y="NEXT")
             
         # Ensure export directory exists
         export_dir = os.path.join(get_settings().data_dir, "exports")
