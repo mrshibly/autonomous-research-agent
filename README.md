@@ -4,6 +4,7 @@ emoji: 🚀
 colorFrom: indigo
 colorTo: cyan
 sdk: docker
+app_file: backend/run.py
 pinned: false
 ---
 
