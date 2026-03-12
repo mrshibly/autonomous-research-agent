@@ -22,16 +22,10 @@
   transform: scale(1.1) rotate(10deg);
 }
 
-.chat-toggle-btn.hidden {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-
 .chat-sidebar {
   position: fixed;
   top: 1rem;
-  right: -420px;
+  right: 1rem;
   bottom: 1rem;
   width: 400px;
   background: rgba(18, 18, 20, 0.85);
@@ -41,12 +35,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1001;
-}
-
-.chat-sidebar.open {
-  right: 1rem;
 }
 
 .chat-header {

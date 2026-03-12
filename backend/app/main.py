@@ -88,7 +88,18 @@ if not os.path.exists(frontend_dist):
 
 if os.path.exists(frontend_dist):
     logger.info(f"🌐 Serving frontend from {frontend_dist}")
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+    
+    from fastapi.responses import FileResponse
+    @app.get("/{path:path}")
+    async def serve_spa(path: str):
+        if path.startswith("api/v1") or path.startswith("docs") or path.startswith("redoc") or path.startswith("openapi.json"):
+             return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        
+        index_path = os.path.join(frontend_dist, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return JSONResponse(status_code=404, content={"detail": "Frontend not built"})
 else:
     logger.warning("⚠️ Frontend dist folder not found. API-only mode.")
 
