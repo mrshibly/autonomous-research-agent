@@ -3,6 +3,10 @@ FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
+
+# ARG to bust cache on every build if passed, or just by modifying this line
+ARG CACHE_BUST=3
+
 COPY frontend/ ./
 RUN npm run build
 
