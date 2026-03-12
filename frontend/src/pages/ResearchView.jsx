@@ -155,16 +155,8 @@ export default function ResearchView() {
             </div>
           </div>
           <div className="header-actions">
-            <button 
-              className={`copy-link-btn ${copySuccess ? 'success' : ''}`}
-              onClick={handleCopyLink}
-              title="Copy shareable report link"
-            >
-              {copySuccess ? <HiOutlineCheck /> : <HiOutlineLink />}
-              {copySuccess ? 'Link Copied!' : 'Share Report'}
-            </button>
             {report && (
-              <div className="export-actions">
+              <>
                 <button 
                   className="export-btn pdf" 
                   onClick={() => handleExport('pdf')}
@@ -186,8 +178,16 @@ export default function ResearchView() {
                 >
                   <HiOutlineDocumentArrowDown /> BibTeX
                 </button>
-              </div>
+              </>
             )}
+            <button 
+              className={`copy-link-btn ${copySuccess ? 'success' : ''}`}
+              onClick={handleCopyLink}
+              title="Copy shareable report link"
+            >
+              {copySuccess ? <HiOutlineCheck /> : <HiOutlineLink />}
+              {copySuccess ? 'Link Copied!' : 'Share Report'}
+            </button>
           </div>
         </div>
       </motion.div>

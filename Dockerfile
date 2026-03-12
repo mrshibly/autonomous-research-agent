@@ -5,7 +5,7 @@ COPY frontend/package*.json ./
 RUN npm install
 
 # ARG to bust cache on every build if passed, or just by modifying this line
-ARG CACHE_BUST=7
+ARG CACHE_BUST=8
 
 COPY frontend/ ./
 RUN npm run build
