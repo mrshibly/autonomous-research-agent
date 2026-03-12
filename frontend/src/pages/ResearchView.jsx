@@ -53,24 +53,43 @@ export default function ResearchView() {
       
       if (!response.ok) throw new Error('Download failed');
       
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+      const data = await response.arrayBuffer();
       
-      // Determine extension and filename
-      const extension = type === 'pdf' ? '.pdf' : type === 'bibtex' ? '.bib' : '.md';
+      // Determine extension, filename, and MIME type
+      let extension, mimeType;
+      if (type === 'pdf') {
+        extension = '.pdf';
+        mimeType = 'application/pdf';
+      } else if (type === 'bibtex') {
+        extension = '.bib';
+        mimeType = 'application/x-bibtex';
+      } else {
+        extension = '.md';
+        mimeType = 'text/markdown';
+      }
+      
       const safeTopic = (status?.topic || 'research-report')
         .replace(/[^a-z0-9]/gi, '_')
         .toLowerCase()
         .slice(0, 30);
       const filename = `${safeTopic}_${taskId.slice(0, 8)}${extension}`;
       
+      // Create a typed blob with the correct MIME type
+      const blob = new Blob([data], { type: mimeType });
+      const blobUrl = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = filename;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
     } catch (err) {
       console.error('Export error:', err);
       alert('Failed to export report. Please try again.');

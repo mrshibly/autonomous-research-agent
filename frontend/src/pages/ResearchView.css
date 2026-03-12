@@ -112,10 +112,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.65rem 1.1rem;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-glass);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   color: var(--text-primary);
   font-family: var(--font-family);
   font-size: 0.8rem;
@@ -123,34 +123,81 @@
   cursor: pointer;
   transition: all var(--transition-normal);
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.export-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 25%;
+  width: 50%;
+  height: 2px;
+  border-radius: 2px;
+  transition: all var(--transition-normal);
 }
 
 .export-btn:hover {
   transform: translateY(-2px);
-  border-color: var(--accent-cyan);
-  background: var(--bg-hover);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.export-btn:hover::after {
+  left: 10%;
+  width: 80%;
 }
 
 .export-btn svg {
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: transform var(--transition-fast);
 }
 
 .export-btn:hover svg {
-  transform: translateY(2px);
+  transform: scale(1.1);
 }
 
 .export-btn.pdf {
-  border-left: 3px solid #f40a12; /* PDF Red */
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.export-btn.pdf svg {
+  color: #ef4444;
+}
+.export-btn.pdf::after {
+  background: #ef4444;
+}
+.export-btn.pdf:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
 }
 
 .export-btn.markdown {
-  border-left: 3px solid var(--accent-cyan);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+.export-btn.markdown svg {
+  color: var(--accent-cyan);
+}
+.export-btn.markdown::after {
+  background: var(--accent-cyan);
+}
+.export-btn.markdown:hover {
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15);
 }
 
 .export-btn.bibtex {
-  border-left: 3px solid var(--accent-amber);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.export-btn.bibtex svg {
+  color: var(--accent-amber);
+}
+.export-btn.bibtex::after {
+  background: var(--accent-amber);
+}
+.export-btn.bibtex:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
 }
 
 .export-actions {
@@ -158,6 +205,7 @@
   gap: 0.75rem;
   align-items: center;
   flex-wrap: wrap;
+
 }
 
 /* ── Progress Section ────────────────────────────── */

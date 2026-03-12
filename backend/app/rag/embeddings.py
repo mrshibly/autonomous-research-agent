@@ -16,6 +16,11 @@ def _get_local_model():
     global _local_model
     if _local_model is None:
         try:
+            import warnings
+            # Suppress PyTorch precompile artifact registration warnings
+            warnings.filterwarnings("ignore", message=".*already registered.*")
+            warnings.filterwarnings("ignore", message=".*mega-cache.*")
+            
             from sentence_transformers import SentenceTransformer
 
             settings = get_settings()
