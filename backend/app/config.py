@@ -43,7 +43,11 @@ class Settings(BaseSettings):
     serpapi_key: str = ""
 
     # ── Database ──────────────────────────────────────────────────
-    database_url: str = "sqlite+aiosqlite:///./research.db"
+    @property
+    def database_url(self) -> str:
+        """Absolute SQLite database URL."""
+        db_path = os.path.join(self.data_dir, "research.db")
+        return f"sqlite+aiosqlite:///{db_path}"
 
     # ── CORS ──────────────────────────────────────────────────────
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
