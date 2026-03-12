@@ -215,6 +215,47 @@ async def get_history(
     )
 
 
+async def _rebuild_vector_index(db: AsyncSession, task_id: str, vector_dir: str):
+    """Rebuild the vector index from the database when files are missing."""
+    from app.rag.vector_store import VectorStore
+    from app.rag.chunker import chunk_text
+    
+    stmt = (
+        select(ResearchTask)
+        .where(ResearchTask.id == task_id)
+        .options(selectinload(ResearchTask.papers))
+    )
+    result = await db.execute(stmt)
+    task = result.scalar_one_or_none()
+    
+    if not task or not task.papers:
+        return None
+    
+    logger.info(f"Rebuilding vector index for task {task_id} from {len(task.papers)} papers")
+    
+    vector_store = VectorStore()
+    all_chunks = []
+    all_metadatas = []
+    
+    for paper in task.papers:
+        text = paper.summary or paper.abstract or ""
+        if text.strip():
+            chunks = chunk_text(text, chunk_size=500, overlap=50)
+            metadata = [{"paper_title": paper.title or "", "paper_url": paper.url or ""}] * len(chunks)
+            all_chunks.extend(chunks)
+            all_metadatas.extend(metadata)
+    
+    if not all_chunks:
+        return None
+    
+    await vector_store.add_documents(all_chunks, all_metadatas)
+    os.makedirs(vector_dir, exist_ok=True)
+    vector_store.save(vector_dir)
+    logger.info(f"Successfully rebuilt vector index at {vector_dir} with {len(all_chunks)} chunks")
+    
+    return vector_store
+
+
 async def chat_with_task(
     db: AsyncSession, task_id: str, message: str
 ) -> ChatResponse:
@@ -237,27 +278,38 @@ async def chat_with_task(
     
     # Check if data directory exists (system check)
     if not os.path.exists(settings.data_dir):
-        logger.error(f"Critical: Data directory missing at {settings.data_dir}")
-        raise RuntimeError(f"Server configuration error: Data storage missing at {settings.data_dir}")
+        os.makedirs(settings.data_dir, exist_ok=True)
 
-    if not os.path.exists(vector_dir):
-        logger.warning(f"Vector index not found at {vector_dir} for task {task_id}")
-        if task.progress < 50:
-            raise RuntimeError(f"Still indexing research data ({task.progress}%). Please wait a moment.")
+    vector_store = None
+
+    if os.path.exists(os.path.join(vector_dir, "index.faiss")):
+        # Load existing vector store
+        try:
+            vector_store = VectorStore()
+            vector_store.load(vector_dir)
+            if not vector_store.documents:
+                vector_store = None
+        except Exception as e:
+            logger.warning(f"Failed to load vector store from {vector_dir}: {e}")
+            vector_store = None
+
+    # If vector store is missing or empty, try to rebuild from DB
+    if vector_store is None:
+        if task.status != "completed":
+            if task.progress < 50:
+                raise RuntimeError(f"Still indexing research data ({task.progress}%). Please wait a moment.")
+            raise RuntimeError("Research is still in progress. Please wait for it to complete.")
         
-        # Check if it was ever completed
-        if task.status == "completed":
-             raise FileNotFoundError("Research data has been cleared from temporary storage. This usually happens after a system restart. Please start a new research task.")
+        logger.info(f"Vector index missing for completed task {task_id}. Attempting rebuild from database...")
+        vector_store = await _rebuild_vector_index(db, task_id, vector_dir)
         
-        raise FileNotFoundError("Research data not found. Please restart the research process.")
+        if vector_store is None:
+            raise RuntimeError(
+                "Could not rebuild knowledge index. The research papers may not have been saved properly. "
+                "Please start a new research task."
+            )
 
     try:
-        vector_store = VectorStore()
-        vector_store.load(vector_dir)
-        
-        if not vector_store.documents:
-            raise RuntimeError("Knowledge base is empty. No papers were successfully indexed.")
-
         hybrid_searcher = HybridSearcher(vector_store)
         await hybrid_searcher.update_index(
             [d["text"] for d in vector_store.documents],

@@ -123,7 +123,7 @@ def generate_pdf_report(report_data: dict, task_topic: str) -> str:
         pdf.set_font("helvetica", "", 11)
         pdf.set_text_color(51, 65, 85)
         for tech in report_data.get("key_techniques", []):
-            pdf.multi_cell(effective_width, 8, f"  •  {sanitize_text_for_pdf(tech)}")
+            pdf.multi_cell(effective_width, 8, f"  -  {sanitize_text_for_pdf(tech)}")
         pdf.ln(8)
         
         # Future Directions
@@ -148,7 +148,7 @@ def generate_pdf_report(report_data: dict, task_topic: str) -> str:
         pdf.set_font("helvetica", "", 9)
         pdf.set_text_color(100, 116, 139) # Slate 500
         for ref in report_data.get("references", []):
-            pdf.multi_cell(effective_width, 5, f"  [+] {sanitize_text_for_pdf(ref)}")
+            pdf.multi_cell(effective_width, 5, sanitize_text_for_pdf(f"  [+] {ref}"))
             
         # Ensure export directory exists
         export_dir = os.path.join(get_settings().data_dir, "exports")
