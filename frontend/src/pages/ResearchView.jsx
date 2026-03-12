@@ -139,10 +139,10 @@ export default function ResearchView() {
             <button 
               className={`copy-link-btn ${copySuccess ? 'success' : ''}`}
               onClick={handleCopyLink}
-              title="Copy shareable link"
+              title="Copy shareable report link"
             >
               {copySuccess ? <HiOutlineCheck /> : <HiOutlineLink />}
-              {copySuccess ? 'Copied!' : 'Copy Link'}
+              {copySuccess ? 'Link Copied!' : 'Share Report'}
             </button>
             {report && (
               <div className="export-actions">

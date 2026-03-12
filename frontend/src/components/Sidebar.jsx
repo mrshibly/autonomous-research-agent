@@ -49,9 +49,15 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-badge">
-          <HiOutlineSparkles className="badge-icon" />
-          <span>Powered by AI</span>
+        <div className="social-links">
+          <a href="https://github.com/mrshibly" target="_blank" rel="noopener noreferrer" className="social-link" title="GitHub">
+            <HiOutlineSparkles className="badge-icon" />
+            <span>@mrshibly</span>
+          </a>
+          <div className="social-divider" />
+          <a href="https://linkedin.com/in/mrshibly" target="_blank" rel="noopener noreferrer" className="social-link">
+             LinkedIn
+          </a>
         </div>
       </div>
     </aside>

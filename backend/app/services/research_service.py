@@ -242,10 +242,14 @@ async def chat_with_task(
 
     if not os.path.exists(vector_dir):
         logger.warning(f"Vector index not found at {vector_dir} for task {task_id}")
-        # Be more specific about WHY it might be missing
         if task.progress < 50:
-            raise RuntimeError(f"Indexing in progress ({task.progress}%). Please wait until papers are read.")
-        raise FileNotFoundError(f"Knowledge index missing. Current Path: {vector_dir}. Please restart research.")
+            raise RuntimeError(f"Still indexing research data ({task.progress}%). Please wait a moment.")
+        
+        # Check if it was ever completed
+        if task.status == "completed":
+             raise FileNotFoundError("Research data has been cleared from temporary storage. This usually happens after a system restart. Please start a new research task.")
+        
+        raise FileNotFoundError("Research data not found. Please restart the research process.")
 
     try:
         vector_store = VectorStore()
