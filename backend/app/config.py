@@ -3,6 +3,7 @@ Application configuration using Pydantic Settings.
 Loads from environment variables and .env file.
 """
 
+import os
 from functools import lru_cache
 from typing import Literal
 
