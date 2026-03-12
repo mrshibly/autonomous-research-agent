@@ -2,7 +2,7 @@
 title: Autonomous AI Research Agent
 emoji: 🚀
 colorFrom: indigo
-colorTo: cyan
+colorTo: blue
 sdk: docker
 app_file: backend/run.py
 pinned: false
